@@ -1,9 +1,10 @@
 {
-  "name": "no-name",
-  "license": "UNLICENSED",
   "dependencies": {
     "@polymer/iron-icon": "3.0.1",
+    "@polymer/iron-iconset-svg": "^3.0.1",
     "@polymer/iron-list": "3.1.0",
+    "@polymer/paper-button": "^3.0.1",
+    "@polymer/paper-icon-button": "^3.0.2",
     "@polymer/polymer": "3.2.0",
     "@vaadin/vaadin-accordion": "1.2.0",
     "@vaadin/vaadin-app-layout": "2.2.0",
@@ -47,8 +48,10 @@
     "@vaadin/vaadin-upload": "4.4.2",
     "@webcomponents/webcomponentsjs": "^2.2.10",
     "construct-style-sheets-polyfill": "2.4.16",
-    "lit-element": "2.5.1",
-    "lit-html": "1.4.1"
+    "line-awesome": "1.3.0",
+    "lit-element": "^2.2.1",
+    "lit-html": "^1.1.2",
+    "lumo-css-framework": "^4.0.10"
   },
   "devDependencies": {
     "chokidar": "^3.5.0",
@@ -69,10 +72,15 @@
     "webpack-dev-server": "3.11.0",
     "webpack-merge": "4.2.2"
   },
+  "license": "UNLICENSED",
+  "name": "no-name",
   "vaadin": {
     "dependencies": {
       "@polymer/iron-icon": "3.0.1",
+      "@polymer/iron-iconset-svg": "^3.0.1",
       "@polymer/iron-list": "3.1.0",
+      "@polymer/paper-button": "^3.0.1",
+      "@polymer/paper-icon-button": "^3.0.2",
       "@polymer/polymer": "3.2.0",
       "@vaadin/vaadin-accordion": "1.2.0",
       "@vaadin/vaadin-app-layout": "2.2.0",
@@ -116,8 +124,10 @@
       "@vaadin/vaadin-upload": "4.4.2",
       "@webcomponents/webcomponentsjs": "^2.2.10",
       "construct-style-sheets-polyfill": "2.4.16",
-      "lit-element": "2.5.1",
-      "lit-html": "1.4.1"
+      "line-awesome": "1.3.0",
+      "lit-element": "^2.2.1",
+      "lit-html": "^1.1.2",
+      "lumo-css-framework": "^4.0.10"
     },
     "devDependencies": {
       "chokidar": "^3.5.0",
@@ -138,6 +148,6 @@
       "webpack-dev-server": "3.11.0",
       "webpack-merge": "4.2.2"
     },
-    "hash": "bde45549399a019f6011496129d95820380ead15bdb459c6e2828c8f99664430"
+    "hash": "0acfb8098343739c5d4f30cdba4080be2cdd43668dba8bb34bd1e6db0d559101"
   }
 }

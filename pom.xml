@@ -152,6 +152,13 @@
             <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Components Vaadin -->
+        <dependency>
+            <groupId>org.vaadin.klaudeta</groupId>
+            <artifactId>grid-pagination</artifactId>
+            <version>2.0.10</version>
+        </dependency>
     </dependencies>
 
     <build>
