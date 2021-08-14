@@ -129,11 +129,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-testbench</artifactId>
-            <scope>test</scope>
-        </dependency>
+
         <!-- Include JUnit 4 support for TestBench and others -->
         <dependency>
             <groupId>org.junit.vintage</groupId>
@@ -158,6 +154,17 @@
             <groupId>org.vaadin.klaudeta</groupId>
             <artifactId>grid-pagination</artifactId>
             <version>2.0.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-button-flow</artifactId>
+        </dependency>
+
+        <!-- Otras dependencias -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>5.4.1.Final</version>
         </dependency>
     </dependencies>
 

@@ -2,6 +2,8 @@ package com.uah.es.service;
 
 import com.uah.es.model.Alumno;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -11,7 +13,7 @@ public class AlumnosServiceImpl implements IAlumnosService {
     @Autowired
     RestTemplate template;
 
-    String url = "http://localhost:8001/alumnos";
+    String url = "http://localhost:8002/alumnos";
 
     /*@Override
     public Page<Alumno> buscarTodos(Pageable pageable) {
@@ -51,13 +53,60 @@ public class AlumnosServiceImpl implements IAlumnosService {
     }
 
     @Override
-    public void guardarAlumno(Alumno alumno) {
+    public Boolean guardarAlumno(Alumno alumno) {
+
+        Boolean result = false;
+
+        alumno.setIdAlumno(0);
+        ResponseEntity<String> response = template.postForEntity(url, alumno, String.class);
+
+        // Verificar la respuesta de la petición
+        if (response.getStatusCode() == HttpStatus.OK) {
+            result = true;
+            System.out.println("Request Successful");
+        } else {
+            result = false;
+            System.out.println("Request Failed");
+        }
+
+        return result;
+
+        /*  if (alumno.getIdAlumno() != null && alumno.getIdAlumno() > 0) {
+            template.put(url, alumno);
+        } else {*/
+
+       /* } */
+    }
+
+    @Override
+    public Boolean actualizarAlumno(Alumno alumno) {
+
+        Boolean result = false;
+
         if (alumno.getIdAlumno() != null && alumno.getIdAlumno() > 0) {
             template.put(url, alumno);
+            result=true;
         } else {
-            alumno.setIdAlumno(0);
-            template.postForObject(url, alumno, String.class);
+            result = false;
         }
+
+        return result;
+
+
+        //ResponseEntity<String> response = template.postForEntity(url, alumno, String.class);
+
+        // Verificar la respuesta de la petición
+        /*if (response.getStatusCode() == HttpStatus.OK) {
+            result = true;
+            System.out.println("Request Successful");
+        } else {
+            result = false;
+            System.out.println("Request Failed");
+        }
+
+        return result;*/
+
+
     }
 
     @Override

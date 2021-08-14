@@ -1,5 +1,6 @@
 package com.uah.es.model;
 
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +51,10 @@ public class Alumno {
 
     public void setCursos(List<Curso> cursos) {
         this.cursos = cursos;
+    }
+
+    public boolean isImportant() {
+        return true;
     }
 
 
