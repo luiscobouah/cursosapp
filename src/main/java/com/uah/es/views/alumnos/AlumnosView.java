@@ -13,6 +13,7 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -61,6 +62,17 @@ public class AlumnosView extends Div {
         grid.addColumn(Alumno::getIdAlumno).setHeader("ID").setKey("id");
         grid.addColumn(Alumno::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true);
         grid.addColumn(Alumno::getCorreo).setHeader("Correo").setKey("correo").setSortable(true);
+        //grid.addColumn(Alumno::getStringCursos).setHeader("Cursos").setKey("cursos").setSortable(false);
+        grid.addComponentColumn(item -> {
+
+            Button cursosBtn = new Button();
+            cursosBtn.setText(item.getStringCursos());
+            cursosBtn.getStyle().set("cursor", "pointer");
+            //cursosBtn.addClassName("button-link");
+            cursosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            cursosBtn.addClickListener(e -> verListadoCursos(item));
+            return cursosBtn;
+        }).setHeader("Cursos");
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -154,13 +166,11 @@ public class AlumnosView extends Div {
     }
 
     private void editarAlumno(Alumno alumno) {
-        System.out.println("Editar"+alumno.getNombre());
         alumnoForm.setAlumno(alumno);
         formularioDg.open();
     }
 
     private void elimarAlumno(Alumno alumno) {
-        System.out.println("Eliminar alumno"+alumno.getNombre());
         Dialog confirmacionDg = new Dialog();
         Label msjConfirmacion = new Label();
         msjConfirmacion.setText("Desea eliminar el alumno: "+ alumno.getNombre());
@@ -186,6 +196,25 @@ public class AlumnosView extends Div {
         btns.add(eliminarBtn,cancelarBtn);
         confirmacionDg.add(msjConfirmacion,btns);
         confirmacionDg.open();
+    }
+
+    private void verListadoCursos(Alumno alumno) {
+        Dialog listadoCursosDg = new Dialog();
+        Label listadoCursos = new Label();
+        listadoCursos.setText( alumno.getStringCursos());
+
+        HorizontalLayout btns = new HorizontalLayout();
+        Button cerrarBtn = new Button("Cerrar");
+        cerrarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        cerrarBtn.addClickShortcut(Key.ESCAPE);
+
+        cerrarBtn.addClickListener(click -> {
+            listadoCursosDg.close();
+        });
+
+        btns.add(cerrarBtn);
+        listadoCursosDg.add(listadoCursos,btns);
+        listadoCursosDg.open();
     }
 
     private void cerrar() {

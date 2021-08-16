@@ -1,6 +1,5 @@
 package com.uah.es.model;
 
-import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,8 +52,14 @@ public class Alumno {
         this.cursos = cursos;
     }
 
-    public boolean isImportant() {
-        return true;
+    public String getStringCursos() {
+
+        return this.cursos.toString().replace("[", "").replace("]", "");
+    }
+
+    @Override
+    public String toString() {
+        return this.nombre;
     }
 
 

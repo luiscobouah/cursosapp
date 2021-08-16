@@ -104,4 +104,8 @@ public class Curso {
     public int hashCode() {
         return Objects.hash(idCurso);
     }
+
+    public String toString() {
+        return this.nombre;
+    }
 }
