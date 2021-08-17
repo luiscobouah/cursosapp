@@ -13,7 +13,6 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -28,51 +27,52 @@ import org.vaadin.klaudeta.PaginatedGrid;
 @Route(value = "alumnos", layout = MainLayout.class)
 public class AlumnosView extends Div {
 
+    //Servicio para comunicación con el backend
     IAlumnosService alumnosService;
+
+    //Componentes visuales
     AlumnoForm alumnoForm;
-
-
     PaginatedGrid<Alumno> grid = new PaginatedGrid<>();
     TextField correoFiltro = new TextField();
     Button buscarBtn = new Button(new Icon(VaadinIcon.SEARCH));
-    Button nuevoAlumnoBtn = new Button(new Icon(VaadinIcon.NEWSPAPER));
+    Button nuevoAlumnoBtn = new Button("Nuevo Alumno");
     Dialog formularioDg = new Dialog();
 
-
-    Notification notificationOk = new Notification("Se guardado correctamente el alumno", 3000);
+    Notification notificationOk = new Notification("Se han guardado correctamente los datos del alumno", 3000);
     Notification notificationKo = new Notification("Error al guardar el alumno", 3000);
-
-
 
     public AlumnosView(IAlumnosService alumnosService) {
 
-        addClassName("usuarios-view");
         this.alumnosService = alumnosService;
+        addClassName("usuarios-view");
         configurarGrid();
-        configurarFiltros();
-        configurarFormulario();
-        add(correoFiltro,buscarBtn,nuevoAlumnoBtn,grid);
+        configurarBuscador();
+        //configurarFormulario();
+        add(correoFiltro,buscarBtn,grid);
     }
 
+    /**
+     * Configuracion del grid y sus columnas.
+     *
+     */
     private void configurarGrid() {
+
+        //Se obtienen todos los alumnos
         Alumno[] listaAlumnos = alumnosService.buscarTodos();
 
-        /*TemplateRenderer<Alumno> importantRenderer = TemplateRenderer.<Alumno>of(
-                "<iron-icon icon='vaadin:check' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: var(--lumo-primary-text-color);'>");*/
-        grid.addColumn(Alumno::getIdAlumno).setHeader("ID").setKey("id");
-        grid.addColumn(Alumno::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true);
-        grid.addColumn(Alumno::getCorreo).setHeader("Correo").setKey("correo").setSortable(true);
-        //grid.addColumn(Alumno::getStringCursos).setHeader("Cursos").setKey("cursos").setSortable(false);
+        // Se añaden las columnas al grid
+        grid.addColumn(Alumno::getIdAlumno).setHeader("ID").setKey("id").setAutoWidth(true);;
+        grid.addColumn(Alumno::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
+        grid.addColumn(Alumno::getCorreo).setHeader("Correo").setKey("correo").setSortable(true).setAutoWidth(true);
+        //grid.addColumn(Alumno::getStringCursos).setHeader("Cursos").setKey("curso").setAutoWidth(true);
         grid.addComponentColumn(item -> {
-
             Button cursosBtn = new Button();
             cursosBtn.setText(item.getStringCursos());
             cursosBtn.getStyle().set("cursor", "pointer");
-            //cursosBtn.addClassName("button-link");
             cursosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             cursosBtn.addClickListener(e -> verListadoCursos(item));
             return cursosBtn;
-        }).setHeader("Cursos");
+        }).setHeader("Cursos").setAutoWidth(true);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -96,60 +96,76 @@ public class AlumnosView extends Div {
         .setHeader("Eliminar")
         .setTextAlign(ColumnTextAlign.CENTER);
 
-        // Sets the max number of items to be rendered on the grid for each page
+        // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(12);
-        // Sets how many pages should be visible on the pagination before and/or after the current selected page
-        grid.setPaginatorSize(3);
         grid.setItems(listaAlumnos);
-
     }
 
-    private void configurarFiltros() {
+    /**
+     * Configuracion del buscador.
+     *
+     */
+    private void configurarBuscador() {
+
+        // Configuracion del filtro para buscar por correo
         correoFiltro.setLabel("Correo electrónico");
         correoFiltro.setWidth("30%");
         correoFiltro.setClearButtonVisible(true);
         correoFiltro.setValueChangeMode(ValueChangeMode.EAGER);
         buscarBtn.setEnabled(false);
 
-        // Habilitamos el boton buscar solo cuando el correo tenga valor
+        // Se habilita el btn buscar solo cuando el correo tenga valor
         correoFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!correoFiltro.getValue().isEmpty());
         });
-
         buscarBtn.addClickListener(e -> filtrarPorCorreo());
     }
 
+    /**
+     * Configuracion del formulario para el alta de un nuevo alumno.
+     *
+     */
     private void configurarFormulario(){
 
         alumnoForm = new AlumnoForm();
-        alumnoForm.addListener(AlumnoForm.SaveEvent.class, this::guardarAlumno);
-        alumnoForm.addListener(AlumnoForm.CloseEvent.class, e -> cerrar());
+        alumnoForm.addListener(AlumnoForm.GuardarEvent.class, this::guardarAlumno);
+        alumnoForm.addListener(AlumnoForm.CerrarEvent.class, e -> cerrarFormulario());
         formularioDg.add(alumnoForm);
 
         nuevoAlumnoBtn.addClickListener(event -> {
             formularioDg.open();
         });
-
     }
 
+    /**
+     * Funcición para buscar un alumno por el correo.
+     *
+     */
     private void filtrarPorCorreo() {
-        System.out.println(correoFiltro.getValue());
         Alumno alumno = alumnosService.buscarAlumnoPorCorreo(correoFiltro.getValue());
         if (alumno!=null){
             grid.setItems(alumno);
         }
     }
 
-    private void updateList() {
+    /**
+     * Funcición para actualizar el grid con todos los alumnos que se han dado de alta.
+     *
+     */
+    private void actualizarGrid() {
         Alumno[] listaAlumnos = alumnosService.buscarTodos();
         grid.setItems(listaAlumnos);
     }
 
-    private void guardarAlumno(AlumnoForm.SaveEvent evt) {
-
+    /**
+     * Funcición para crear o actulizar los datos de un alumno.
+     *
+     */
+    private void guardarAlumno(AlumnoForm.GuardarEvent evt) {
         Boolean result;
         Alumno alumno = evt.getAlumno();
 
+        // Se crea un nuevo alumno o se actualiza uno existente
         if(alumno.getIdAlumno() != null && alumno.getIdAlumno() > 0) {
             result = alumnosService.actualizarAlumno(alumno);
         } else {
@@ -161,19 +177,29 @@ public class AlumnosView extends Div {
         } else {
             notificationKo.open();
         }
-        updateList();
-        cerrar();
+        actualizarGrid();
+        cerrarFormulario();
     }
 
+    /**
+     * Funcición para editar los datos de un alumno.
+     *
+     */
     private void editarAlumno(Alumno alumno) {
         alumnoForm.setAlumno(alumno);
         formularioDg.open();
     }
 
+    /**
+     * Funcición para eliminar un alumno.
+     *
+     */
     private void elimarAlumno(Alumno alumno) {
+
+        // Se configura el Dialog para confirmar la eliminación
         Dialog confirmacionDg = new Dialog();
         Label msjConfirmacion = new Label();
-        msjConfirmacion.setText("Desea eliminar el alumno: "+ alumno.getNombre());
+        msjConfirmacion.setText("Desea eliminar el alumno "+alumno.getNombre()+"?");
 
         HorizontalLayout btns = new HorizontalLayout();
         Button cancelarBtn = new Button("Cancelar");
@@ -186,7 +212,7 @@ public class AlumnosView extends Div {
         eliminarBtn.addClickListener(click -> {
             alumnosService.eliminarAlumno(alumno.getIdAlumno());
             confirmacionDg.close();
-            updateList();
+            actualizarGrid();
 
         });
         cancelarBtn.addClickListener(click -> {
@@ -198,7 +224,13 @@ public class AlumnosView extends Div {
         confirmacionDg.open();
     }
 
+    /**
+     * Funcición para visualizar el listado de cursos que tiene un alumno.
+     *
+     */
     private void verListadoCursos(Alumno alumno) {
+
+        // Se configura el Dialog para visualizar el listado de cursos de un alumno
         Dialog listadoCursosDg = new Dialog();
         Label listadoCursos = new Label();
         listadoCursos.setText( alumno.getStringCursos());
@@ -217,12 +249,14 @@ public class AlumnosView extends Div {
         listadoCursosDg.open();
     }
 
-    private void cerrar() {
+    /**
+     * Funcición para cerrar el formulario de alumno.
+     *
+     */
+    private void cerrarFormulario() {
         Alumno alumno = new Alumno();
         alumnoForm.setAlumno(alumno);
         formularioDg.close();
-        //form.setVisible(false);
-        //removeClassName("editing");
     }
 
 }

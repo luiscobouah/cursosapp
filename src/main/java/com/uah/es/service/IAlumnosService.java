@@ -12,9 +12,9 @@ public interface IAlumnosService {
 
     Alumno buscarAlumnoPorCorreo(String correo);
 
-    Boolean guardarAlumno(Alumno alumno);
+    boolean guardarAlumno(Alumno alumno);
 
-    Boolean actualizarAlumno(Alumno alumno);
+    boolean actualizarAlumno(Alumno alumno);
 
     void eliminarAlumno(Integer idAlumno);
 

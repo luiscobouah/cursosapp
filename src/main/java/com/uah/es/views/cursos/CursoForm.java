@@ -1,6 +1,6 @@
-package com.uah.es.views.alumnos;
+package com.uah.es.views.cursos;
 
-import com.uah.es.model.Alumno;
+import com.uah.es.model.Curso;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -9,37 +9,40 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.shared.Registration;
 
-public class AlumnoForm extends FormLayout {
+public class CursoForm extends FormLayout {
 
     // Inputs y btns del formulario
     TextField nombre= new TextField("Nombre");
-    EmailField correo = new EmailField ("Correo");
+    TextField duracion = new TextField ("Duración");
+    TextField profesor = new TextField ("Profesor");
+    TextField precio = new TextField ("Precio");
+    TextField categoria = new TextField ("Categoría");
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
 
-    Binder<Alumno> binder = new BeanValidationBinder<>(Alumno.class);
-    private Alumno alumno = new Alumno();
+    Binder<Curso> binder = new BeanValidationBinder<>(Curso.class);
+    private Curso curso = new Curso();
 
-    public AlumnoForm(){
+    public CursoForm(){
 
         // Relacionamos los atributos del objeto Alumno con los campos del formulario
-        binder.forField(correo)
-                .withValidator(new EmailValidator("Correo no válido"))
-                .asRequired("Campo requerido")
-                .bind(Alumno::getCorreo,Alumno::setCorreo);
         binder.forField(nombre)
                 .asRequired("Campo requerido")
-                .bind( Alumno::getNombre,Alumno::setNombre);
+                .bind(Curso::getNombre,Curso::setNombre);
+        binder.forField(profesor)
+                .asRequired("Campo requerido")
+                .bind(Curso::getProfesor,Curso::setProfesor);
+        binder.forField(categoria)
+                .asRequired("Campo requerido")
+                .bind(Curso::getCategoria,Curso::setCategoria);
 
-        add(nombre,correo,configurarBtnsLayout());
+        add(nombre,profesor,categoria,configurarBtnsLayout());
     }
 
     private Component configurarBtnsLayout() {
@@ -58,15 +61,15 @@ public class AlumnoForm extends FormLayout {
         return new HorizontalLayout(guardarBtn,cancelarBtn);
     }
 
-    public void setAlumno(Alumno alumno) {
-        this.alumno = alumno;
-        binder.readBean(alumno);
+    public void setCurso(Curso curso) {
+        this.curso = curso;
+        binder.readBean(curso);
     }
 
     private void validarYGuardar() {
         try {
-            binder.writeBean(alumno);
-            fireEvent(new GuardarEvent(this, alumno));
+            binder.writeBean(curso);
+            fireEvent(new CursoForm.GuardarEvent(this, curso));
         } catch (ValidationException e) {
             e.printStackTrace();
         }
@@ -76,27 +79,27 @@ public class AlumnoForm extends FormLayout {
      * Eventos de los botones del formulario.
      *
      */
-    public static abstract class AlumnoFormEvent extends ComponentEvent<AlumnoForm> {
-        private Alumno alumno;
+    public static abstract class CursoFormEvent extends ComponentEvent<CursoForm> {
+        private Curso curso;
 
-        protected AlumnoFormEvent(AlumnoForm source, Alumno alumno) {
+        protected CursoFormEvent(CursoForm source, Curso curso) {
             super(source, false);
-            this.alumno = alumno;
+            this.curso = curso;
         }
 
-        public Alumno getAlumno() {
-            return alumno;
-        }
-    }
-
-    public static class GuardarEvent extends AlumnoFormEvent {
-        GuardarEvent(AlumnoForm source, Alumno alumno) {
-            super(source, alumno);
+        public Curso getCurso() {
+            return curso;
         }
     }
 
-    public static class CerrarEvent extends AlumnoFormEvent {
-        CerrarEvent(AlumnoForm source) {
+    public static class GuardarEvent extends CursoForm.CursoFormEvent {
+        GuardarEvent(CursoForm source, Curso curso) {
+            super(source, curso);
+        }
+    }
+
+    public static class CerrarEvent extends CursoForm.CursoFormEvent {
+        CerrarEvent(CursoForm source) {
             super(source, null);
         }
     }
@@ -105,6 +108,7 @@ public class AlumnoForm extends FormLayout {
                                                                   ComponentEventListener<T> listener) {
         return getEventBus().addListener(eventType, listener);
     }
+
 
 
 }

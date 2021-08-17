@@ -1,7 +1,10 @@
 package com.uah.es.service;
 
+import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -11,67 +14,57 @@ public class CursosServiceImpl implements ICursosService {
     @Autowired
     RestTemplate template;
 
-    String url = "http://localhost:8090/api/zcursos/cursos";
+    String url = "http://localhost:8002/cursos";
 
-    /*@Override
-    public Page<Curso> buscarTodos(Pageable pageable) {
-        Curso[] cursos = template.getForObject(url, Curso[].class);
-        List<Curso> cursosList = Arrays.asList(cursos);
-
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<Curso> list;
-
-        if (cursosList.size() < startItem) {
-            list = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, cursosList.size());
-            list = cursosList.subList(startItem, toIndex);
-        }
-
-        Page<Curso> page = new PageImpl<>(list, PageRequest.of(currentPage, pageSize), cursosList.size());
-        return page;
-    }*/
+    @Override
+    public Curso[] buscarTodos() {
+        return template.getForObject(url, Curso[].class);
+    }
 
     @Override
     public Curso buscarCursoPorId(Integer idCurso) {
-        Curso curso = template.getForObject(url + "/" + idCurso, Curso.class);
-        return curso;
+        return template.getForObject(url + "/" + idCurso, Curso.class);
     }
 
-   /*@Override
-    public Page<Curso> buscarCursosPorNombre(String nombre, Pageable pageable) {
-        Curso[] cursos = template.getForObject(url + "/nombre/" + nombre, Curso[].class);
-        List<Curso> lista = Arrays.asList(cursos);
-        Page<Curso> page = new PageImpl<>(lista, pageable, lista.size());
-        return page;
-    }*/
-
-    /*@Override
-    public Page<Curso> buscarCursosPorCategoria(String categoria, Pageable pageable) {
-        Curso[] cursos = template.getForObject(url + "/categoria/" + categoria, Curso[].class);
-        List<Curso> lista = Arrays.asList(cursos);
-        Page<Curso> page = new PageImpl<>(lista, pageable, lista.size());
-        return page;
-    }*/
-
-   /*@Override
-    public Page<Curso> buscarCursosPorProfesor(String profesor, Pageable pageable) {
-        Curso[] cursos = template.getForObject(url + "/profesor/" + profesor, Curso[].class);
-        List<Curso> lista = Arrays.asList(cursos);
-        Page<Curso> page = new PageImpl<>(lista, pageable, lista.size());
-        return page;
-    }*/
+   @Override
+    public Curso[] buscarCursosPorNombre(String nombre) {
+       return template.getForObject(url + "/nombre/" + nombre, Curso[].class);
+    }
 
     @Override
-    public void guardarCurso(Curso curso) {
+    public Curso[] buscarCursosPorCategoria(String categoria) {
+        return template.getForObject(url + "/categoria/" + categoria, Curso[].class);
+    }
+
+   @Override
+    public Curso[] buscarCursosPorProfesor(String profesor) {
+        return template.getForObject(url + "/profesor/" + profesor, Curso[].class);
+    }
+
+    @Override
+    public boolean guardarCurso(Curso curso) {
+
+        boolean result = false;
+        curso.setIdCurso(0);
+        ResponseEntity<String> response = template.postForEntity(url, curso, String.class);
+
+        // Verificar la respuesta de la petición
+        if (response.getStatusCode() == HttpStatus.OK) {
+            result = true;
+            System.out.println("Request Successful");
+        }
+        return result;
+    }
+
+    @Override
+    public boolean actualizarCurso(Curso curso) {
+
+        boolean result = false;
         if (curso.getIdCurso() != null && curso.getIdCurso() > 0) {
             template.put(url, curso);
-        } else {
-            curso.setIdCurso(0);
-            template.postForObject(url, curso, String.class);
+            result=true;
         }
+        return result;
     }
 
     @Override

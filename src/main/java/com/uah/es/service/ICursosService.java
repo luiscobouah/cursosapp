@@ -4,17 +4,19 @@ import com.uah.es.model.Curso;
 
 public interface ICursosService {
 
-    //Page<Curso> buscarTodos(Pageable pageable);
+    Curso[] buscarTodos();
 
     Curso buscarCursoPorId(Integer idCurso);
 
-    //Page<Curso> buscarCursosPorNombre(String nombre, Pageable pageable);
+    Curso[] buscarCursosPorNombre(String nombre);
 
-    //Page<Curso> buscarCursosPorCategoria(String categoria, Pageable pageable);
+    Curso[] buscarCursosPorCategoria(String categoria);
 
-    //Page<Curso> buscarCursosPorProfesor(String profesor, Pageable pageable);
+    Curso[] buscarCursosPorProfesor(String profesor);
 
-    void guardarCurso(Curso curso);
+    boolean guardarCurso(Curso curso);
+
+    boolean actualizarCurso(Curso curso);
 
     void eliminarCurso(Integer idCurso);
 
