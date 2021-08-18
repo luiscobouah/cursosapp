@@ -8,21 +8,32 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.converter.StringToDoubleConverter;
 import com.vaadin.flow.shared.Registration;
 
 public class CursoForm extends FormLayout {
 
+    MemoryBuffer buffer = new MemoryBuffer();
+
     // Inputs y btns del formulario
     TextField nombre= new TextField("Nombre");
-    TextField duracion = new TextField ("Duración");
+    IntegerField duracion = new IntegerField("Duración");
     TextField profesor = new TextField ("Profesor");
     TextField precio = new TextField ("Precio");
-    TextField categoria = new TextField ("Categoría");
+    Select<String> categoria = new Select<>();
+    Upload imagen = new Upload(buffer);
+
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
 
@@ -31,18 +42,28 @@ public class CursoForm extends FormLayout {
 
     public CursoForm(){
 
+        categoria.setLabel("Categoría");
+        categoria.setItems("Desarrollo", "Educación","Finanzas");
         // Relacionamos los atributos del objeto Alumno con los campos del formulario
         binder.forField(nombre)
                 .asRequired("Campo requerido")
                 .bind(Curso::getNombre,Curso::setNombre);
+        binder.forField(duracion)
+                .asRequired("Campo requerido")
+                .bind(Curso::getDuracion,Curso::setDuracion);
         binder.forField(profesor)
                 .asRequired("Campo requerido")
                 .bind(Curso::getProfesor,Curso::setProfesor);
+        binder.forField(precio)
+                .withConverter(new StringToDoubleConverter("No es un precio válido"))
+                .asRequired("Campo requerido")
+                .bind(Curso::getPrecio,Curso::setPrecio);
         binder.forField(categoria)
                 .asRequired("Campo requerido")
                 .bind(Curso::getCategoria,Curso::setCategoria);
 
-        add(nombre,profesor,categoria,configurarBtnsLayout());
+        setMaxWidth("600px");
+        add(nombre,duracion,profesor,precio,categoria,configurarCargaImagen(),configurarBtnsLayout());
     }
 
     private Component configurarBtnsLayout() {
@@ -57,8 +78,21 @@ public class CursoForm extends FormLayout {
         cancelarBtn.addClickListener(click -> fireEvent(new CerrarEvent(this)));
 
         binder.addStatusChangeListener(evt -> guardarBtn.setEnabled(binder.isValid()));
-
         return new HorizontalLayout(guardarBtn,cancelarBtn);
+    }
+
+    private Component configurarCargaImagen() {
+        VerticalLayout verticalLayout = new VerticalLayout();
+        verticalLayout.setPadding(false);
+
+        Label nombreCampoImagen = new Label("Imagen");
+        imagen.setAcceptedFileTypes("image/jpeg", "image/png", "image/gif");
+        imagen.addSucceededListener(event -> {
+            curso.setImagen(event.getFileName());
+        });
+
+        verticalLayout.add(nombreCampoImagen,imagen);
+        return verticalLayout;
     }
 
     public void setCurso(Curso curso) {

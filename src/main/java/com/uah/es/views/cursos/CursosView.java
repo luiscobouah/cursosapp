@@ -14,6 +14,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
@@ -34,12 +35,16 @@ public class CursosView extends Div {
     CursoForm cursoForm;
     PaginatedGrid<Curso> grid = new PaginatedGrid<>();
     TextField nombreFiltro = new TextField();
+    TextField profesorFiltro = new TextField();
+    Select<String> categoriaFiltro = new Select<>();
     Button buscarBtn = new Button(new Icon(VaadinIcon.SEARCH));
     Button nuevoCursoBtn = new Button("Nuevo curso");
     Dialog formularioDg = new Dialog();
 
     Notification notificationOk = new Notification("Se han guardado correctamente los datos de curso", 3000);
     Notification notificationKo = new Notification("Error al guardar el curso", 3000);
+
+    String filtro;
 
     public CursosView(ICursosService cursosService) {
 
@@ -48,7 +53,7 @@ public class CursosView extends Div {
         configurarGrid();
         configurarBuscador();
         configurarFormulario();
-        add(nombreFiltro,buscarBtn,nuevoCursoBtn,grid);
+        add(nombreFiltro,profesorFiltro,categoriaFiltro,buscarBtn,nuevoCursoBtn,grid);
     }
 
     /**
@@ -114,16 +119,38 @@ public class CursosView extends Div {
 
         // Configuracion del filtro para buscar por nombre
         nombreFiltro.setLabel("Nombre");
-        nombreFiltro.setWidth("30%");
+        nombreFiltro.setWidth("20%");
         nombreFiltro.setClearButtonVisible(true);
         nombreFiltro.setValueChangeMode(ValueChangeMode.EAGER);
+
+        // Configuracion del filtro para buscar por profesor
+        profesorFiltro.setLabel("Profesor");
+        profesorFiltro.setWidth("20%");
+        profesorFiltro.setClearButtonVisible(true);
+        profesorFiltro.setValueChangeMode(ValueChangeMode.EAGER);
+
+        categoriaFiltro.setLabel("Categoría");
+        categoriaFiltro.setItems("","Desarrollo", "Educación","Finanzas");
+
         buscarBtn.setEnabled(false);
 
         // Se habilita el btn buscar solo cuando el nombre tenga valor
         nombreFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!nombreFiltro.getValue().isEmpty());
+            profesorFiltro.setEnabled(nombreFiltro.getValue().isEmpty());
+            categoriaFiltro.setEnabled(nombreFiltro.getValue().isEmpty());
         });
-        buscarBtn.addClickListener(e -> filtrarPorNombre());
+        profesorFiltro.addValueChangeListener(e -> {
+            buscarBtn.setEnabled(!profesorFiltro.getValue().isEmpty());
+            nombreFiltro.setEnabled(profesorFiltro.getValue().isEmpty());
+            categoriaFiltro.setEnabled(profesorFiltro.getValue().isEmpty());
+        });
+        categoriaFiltro.addValueChangeListener(e -> {
+            buscarBtn.setEnabled(!categoriaFiltro.getValue().isEmpty());
+            nombreFiltro.setEnabled(categoriaFiltro.getValue().isEmpty());
+            profesorFiltro.setEnabled(categoriaFiltro.getValue().isEmpty());
+        });
+        buscarBtn.addClickListener(e -> filtrar());
     }
 
     /**
@@ -146,8 +173,25 @@ public class CursosView extends Div {
      * Funcición para buscar un curso por el nombre.
      *
      */
-    private void filtrarPorNombre() {
-        Curso[] cursos = cursosService.buscarCursosPorNombre(nombreFiltro.getValue());
+    private void filtrar() {
+        Curso[] cursos = new Curso[0];
+
+        System.out.println("nombre:"+nombreFiltro.getValue());
+        System.out.println("profesor:"+profesorFiltro.getValue());
+        System.out.println("categoria:"+categoriaFiltro.getValue());
+
+       if(nombreFiltro.getValue() != null){
+            cursos =  cursosService.buscarCursosPorNombre(nombreFiltro.getValue());
+        }
+
+        if(profesorFiltro.getValue() != null){
+            cursos =  cursosService.buscarCursosPorProfesor(profesorFiltro.getValue());
+        }
+
+        if(categoriaFiltro.getValue() != null){
+            cursos =  cursosService.buscarCursosPorCategoria(categoriaFiltro.getValue());
+        }
+
         if (cursos!=null){
             grid.setItems(cursos);
         }
@@ -238,8 +282,8 @@ public class CursosView extends Div {
      *
      */
     private void cerrarFormulario() {
-        Curso curso = new Curso();
-        cursoForm.setCurso(curso);
+        //Curso curso = new Curso();
+        //cursoForm.setCurso(curso);
         formularioDg.close();
     }
 
