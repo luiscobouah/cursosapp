@@ -54,7 +54,12 @@ public class Alumno {
 
     public String getStringCursos() {
 
-        return this.cursos.toString().replace("[", "").replace("]", "");
+        if (this.cursos==null){
+            return "";
+        } else {
+            return this.cursos.toString().replace("[", "").replace("]", "");
+        }
+
     }
 
     @Override

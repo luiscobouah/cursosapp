@@ -55,8 +55,18 @@ public class AlumnosServiceImpl implements IAlumnosService {
     }
 
     @Override
-    public void eliminarAlumno(Integer idAlumno) {
-        template.delete(url + "/" + idAlumno);
+    public boolean eliminarAlumno(Integer idAlumno) {
+        boolean result = false;
+
+        try {
+            template.delete(url + "/" + idAlumno);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return result;
+
     }
 
     @Override

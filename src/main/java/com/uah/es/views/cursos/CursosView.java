@@ -15,8 +15,10 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -25,6 +27,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.uah.es.views.MainLayout;
 import com.vaadin.flow.router.RouteAlias;
 import org.vaadin.klaudeta.PaginatedGrid;
+
+import java.util.Objects;
 
 @PageTitle("Cursos")
 @Route(value = "cursos", layout = MainLayout.class)
@@ -42,29 +46,27 @@ public class CursosView extends Div {
     Select<String> categoriaFiltro = new Select<>();
     Button buscarBtn = new Button("Buscar");
     Button mostrarTodosBtn = new Button("Mostrar todos");
-    Button nuevoCursoBtn = new Button("Nuevo curso");
+    Button nuevoCursoBtn = new Button("Nuevo curso",new Icon(VaadinIcon.PLUS));
     Dialog formularioDg = new Dialog();
-
-    Notification notificationOk = new Notification("Se han guardado correctamente los datos de curso", 3000);
-    Notification notificationKo = new Notification("Error al guardar el curso", 3000);
+    Notification notificacion = new Notification("", 3000);
 
     public CursosView(ICursosService cursosService) {
 
         this.cursosService = cursosService;
-        addClassName("cursos-view");
-        HorizontalLayout layout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
-        add(layout,configurarGrid());
 
+        addClassName("cursos-view");
+        HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
+        superiorLayout.setPadding(true);
+        add(superiorLayout,configurarGrid());
     }
 
     /**
-     * Configuracion del grid y sus columnas.
+     * Configuración del grid y sus columnas.
      *
      */
     private Component configurarGrid() {
 
-        //Se obtienen todos los alumnos
-        Curso[] listaCursos = cursosService.buscarTodos();
+        VerticalLayout layoutGrid = new VerticalLayout();
 
         // Se añaden las columnas al grid
         grid.addColumn(Curso::getIdCurso).setHeader("ID").setKey("id").setSortable(true).setAutoWidth(true);
@@ -109,9 +111,10 @@ public class CursosView extends Div {
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(12);
-        grid.setItems(listaCursos);
+        obtenerTodosCursos();
+        layoutGrid.add(grid);
 
-        return grid;
+        return layoutGrid;
     }
 
     /**
@@ -120,7 +123,7 @@ public class CursosView extends Div {
      */
     private Component configurarBuscador() {
 
-        HorizontalLayout horizontalLayout = new HorizontalLayout();
+        HorizontalLayout buscadorLayout = new HorizontalLayout();
 
         // Configuracion del filtro para buscar por nombre
         nombreFiltro.setLabel("Nombre");
@@ -141,19 +144,19 @@ public class CursosView extends Div {
 
         // Se habilita el btn buscar solo cuando el nombre tenga valor
         nombreFiltro.addValueChangeListener(e -> {
-            buscarBtn.setEnabled(!nombreFiltro.getValue().isEmpty());
-            profesorFiltro.setEnabled(nombreFiltro.getValue().isEmpty());
-            categoriaFiltro.setEnabled(nombreFiltro.getValue().isEmpty());
+            buscarBtn.setEnabled(!Objects.equals(nombreFiltro.getValue(), ""));
+            profesorFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
+            categoriaFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
         });
         profesorFiltro.addValueChangeListener(e -> {
-            buscarBtn.setEnabled(!profesorFiltro.getValue().isEmpty());
-            nombreFiltro.setEnabled(profesorFiltro.getValue().isEmpty());
-            categoriaFiltro.setEnabled(profesorFiltro.getValue().isEmpty());
+            buscarBtn.setEnabled(!Objects.equals(profesorFiltro.getValue(), ""));
+            nombreFiltro.setEnabled(Objects.equals(profesorFiltro.getValue(), ""));
+            categoriaFiltro.setEnabled(Objects.equals(profesorFiltro.getValue(), ""));
         });
         categoriaFiltro.addValueChangeListener(e -> {
-            buscarBtn.setEnabled(!categoriaFiltro.getValue().isEmpty());
-            nombreFiltro.setEnabled(categoriaFiltro.getValue().isEmpty());
-            profesorFiltro.setEnabled(categoriaFiltro.getValue().isEmpty());
+            buscarBtn.setEnabled(!Objects.equals(categoriaFiltro.getValue(), ""));
+            nombreFiltro.setEnabled(Objects.equals(categoriaFiltro.getValue(), ""));
+            profesorFiltro.setEnabled(Objects.equals(categoriaFiltro.getValue(), ""));
         });
 
         buscarBtn.getStyle().set("cursor", "pointer");
@@ -165,16 +168,16 @@ public class CursosView extends Div {
         mostrarTodosBtn.addClickListener(e -> {
             nombreFiltro.clear();
             profesorFiltro.clear();
-            categoriaFiltro.clear();
-            actualizarGrid();
+            categoriaFiltro.setValue("");
+            obtenerTodosCursos();
         });
 
         HorizontalLayout layoutBtns = new HorizontalLayout();
         layoutBtns.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         layoutBtns.add(buscarBtn,mostrarTodosBtn);
 
-        horizontalLayout.add(nombreFiltro,profesorFiltro,categoriaFiltro,layoutBtns);
-        return horizontalLayout;
+        buscadorLayout.add(nombreFiltro,profesorFiltro,categoriaFiltro,layoutBtns);
+        return buscadorLayout;
     }
 
     /**
@@ -202,7 +205,7 @@ public class CursosView extends Div {
     }
 
     /**
-     * Funcición para buscar un curso por el nombre.
+     * Función para buscar cursos.
      *
      */
     private void filtrar() {
@@ -212,13 +215,13 @@ public class CursosView extends Div {
         String profesor = profesorFiltro.getValue();
         String categoria = categoriaFiltro.getValue();
 
-        if(nombre!=""){
+        if(!Objects.equals(nombre, "")){
             cursos =  cursosService.buscarCursosPorNombre(nombre);
         }
-        if(profesor!=""){
+        if(!Objects.equals(profesor, "")){
             cursos =  cursosService.buscarCursosPorProfesor(profesor);
         }
-        if(categoria!=""){
+        if(!Objects.equals(categoria, "") && categoria!=null){
             cursos =  cursosService.buscarCursosPorCategoria(categoria);
         }
         if (cursos!=null){
@@ -227,40 +230,44 @@ public class CursosView extends Div {
     }
 
     /**
-     * Funcición para actualizar el grid con todos los cursos que se han dado de alta.
+     * Función para actualizar el grid con todos los cursos que se han dado de alta.
      *
      */
-    private void actualizarGrid() {
+    private void obtenerTodosCursos() {
         Curso[] listaCursos = cursosService.buscarTodos();
         grid.setItems(listaCursos);
     }
 
     /**
-     * Funcición para crear o actualizar los datos de un curso.
+     * Función para crear o actualizar los datos de un curso.
      *
      */
     private void guardarCurso(CursoForm.GuardarEvent evt) {
-        boolean result;
+        boolean resultado;
         Curso curso = evt.getCurso();
 
         // Se crea un nuevo alumno o se actualiza uno existente
         if(curso.getIdCurso() != null && curso.getIdCurso() > 0) {
-            result = cursosService.actualizarCurso(curso);
+            resultado = cursosService.actualizarCurso(curso);
         } else {
-            result = cursosService.guardarCurso(curso);
+            resultado = cursosService.guardarCurso(curso);
         }
 
-        if(result){
-            notificationOk.open();
+        if(resultado){
+            notificacion.setText("Se ha guardado correctamente el curso");
+            notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            notificacion.open();
         } else {
-            notificationKo.open();
+            notificacion.setText("Error al guardar el curso");
+            notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notificacion.open();
         }
-        actualizarGrid();
+        obtenerTodosCursos();
         cerrarFormulario();
     }
 
     /**
-     * Funcición para editar los datos de un curso.
+     * Función para editar los datos de un curso.
      *
      */
     private void editarCurso(Curso curso) {
@@ -269,7 +276,7 @@ public class CursosView extends Div {
     }
 
     /**
-     * Funcición para eliminar un alumno.
+     * Función para eliminar un alumno.
      *
      */
     private void eliminarCurso(Curso curso) {
@@ -277,9 +284,9 @@ public class CursosView extends Div {
         // Se configura el Dialog para confirmar la eliminación
         Dialog confirmacionDg = new Dialog();
         Label msjConfirmacion = new Label();
-        msjConfirmacion.setText("Desea eliminar el curso "+curso.getNombre()+"?");
+        msjConfirmacion.setText("¿Desea eliminar el curso: "+curso.getNombre()+"?");
 
-        HorizontalLayout btns = new HorizontalLayout();
+        HorizontalLayout btnsLayout = new HorizontalLayout();
         Button cancelarBtn = new Button("Cancelar");
         Button eliminarBtn = new Button("Eliminar");
         eliminarBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
@@ -288,17 +295,28 @@ public class CursosView extends Div {
         cancelarBtn.addClickShortcut(Key.ESCAPE);
 
         eliminarBtn.addClickListener(click -> {
-            cursosService.eliminarCurso(curso.getIdCurso());
+
+            if(cursosService.eliminarCurso(curso.getIdCurso())){
+                notificacion.setText("Se ha eliminado correctamente el curso");
+                notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                notificacion.open();
+            } else {
+                notificacion.setText("Error al eliminar el curso");
+                notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                notificacion.open();
+            }
+
             confirmacionDg.close();
-            actualizarGrid();
+            obtenerTodosCursos();
 
         });
         cancelarBtn.addClickListener(click -> {
             confirmacionDg.close();
         });
-
-        btns.add(eliminarBtn,cancelarBtn);
-        confirmacionDg.add(msjConfirmacion,btns);
+        btnsLayout.setPadding(true);
+        btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btnsLayout.add(cancelarBtn,eliminarBtn);
+        confirmacionDg.add(msjConfirmacion,btnsLayout);
         confirmacionDg.open();
     }
 
@@ -307,12 +325,12 @@ public class CursosView extends Div {
     }
 
     /**
-     * Funcición para cerrar el formulario de curso.
+     * Función para cerrar el formulario de curso.
      *
      */
     private void cerrarFormulario() {
-        //Curso curso = new Curso();
-        //cursoForm.setCurso(curso);
+        Curso curso = new Curso();
+        cursoForm.setCurso(curso);
         formularioDg.close();
     }
 

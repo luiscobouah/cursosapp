@@ -9,6 +9,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -44,6 +45,7 @@ public class CursoForm extends FormLayout {
 
         categoria.setLabel("Categoría");
         categoria.setItems("Desarrollo", "Educación","Finanzas");
+
         // Relacionamos los atributos del objeto Alumno con los campos del formulario
         binder.forField(nombre)
                 .asRequired("Campo requerido")
@@ -55,6 +57,7 @@ public class CursoForm extends FormLayout {
                 .asRequired("Campo requerido")
                 .bind(Curso::getProfesor,Curso::setProfesor);
         binder.forField(precio)
+                .withNullRepresentation("")
                 .withConverter(new StringToDoubleConverter("No es un precio válido"))
                 .asRequired("Campo requerido")
                 .bind(Curso::getPrecio,Curso::setPrecio);
@@ -78,7 +81,13 @@ public class CursoForm extends FormLayout {
         cancelarBtn.addClickListener(click -> fireEvent(new CerrarEvent(this)));
 
         binder.addStatusChangeListener(evt -> guardarBtn.setEnabled(binder.isValid()));
-        return new HorizontalLayout(guardarBtn,cancelarBtn);
+
+        HorizontalLayout btnsLayout =  new HorizontalLayout();
+        btnsLayout.setPadding(true);
+        btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btnsLayout.add(cancelarBtn,guardarBtn);
+
+        return btnsLayout;
     }
 
     private Component configurarCargaImagen() {

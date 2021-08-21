@@ -18,6 +18,6 @@ public interface ICursosService {
 
     boolean actualizarCurso(Curso curso);
 
-    void eliminarCurso(Integer idCurso);
+    boolean eliminarCurso(Integer idCurso);
 
 }

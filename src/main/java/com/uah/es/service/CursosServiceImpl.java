@@ -1,10 +1,7 @@
 package com.uah.es.service;
 
-import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -46,13 +43,13 @@ public class CursosServiceImpl implements ICursosService {
 
         boolean result = false;
         curso.setIdCurso(0);
-        ResponseEntity<String> response = template.postForEntity(url, curso, String.class);
-
-        // Verificar la respuesta de la petición
-        if (response.getStatusCode() == HttpStatus.OK) {
+        try {
+            template.postForEntity(url, curso, String.class);
             result = true;
-            System.out.println("Request Successful");
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
+
         return result;
     }
 
@@ -60,15 +57,48 @@ public class CursosServiceImpl implements ICursosService {
     public boolean actualizarCurso(Curso curso) {
 
         boolean result = false;
-        if (curso.getIdCurso() != null && curso.getIdCurso() > 0) {
+        try {
             template.put(url, curso);
-            result=true;
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
+
         return result;
     }
 
+    /*
     @Override
-    public void eliminarCurso(Integer idCurso) {
-        template.delete(url + "/" + idCurso);
+    public boolean eliminarCurso(Integer idCurso) {
+
+        boolean result = false;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<?> httpEntity = new HttpEntity<>(headers);
+        ResponseEntity<Void> response = template.exchange(url, HttpMethod.DELETE, httpEntity,Void.class, idCurso);
+
+        // Verificar la respuesta de la petición
+        if (response.getStatusCode() == HttpStatus.OK) {
+            result = true;
+            System.out.println("Request Successful");
+        }
+
+        return result;
+    }*/
+
+    @Override
+    public boolean eliminarCurso(Integer idCurso) {
+        boolean result = false;
+
+        try {
+            template.delete(url + "/" + idCurso);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return result;
     }
+
 }

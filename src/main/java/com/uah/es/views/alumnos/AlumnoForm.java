@@ -8,6 +8,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -55,7 +56,12 @@ public class AlumnoForm extends FormLayout {
 
         binder.addStatusChangeListener(evt -> guardarBtn.setEnabled(binder.isValid()));
 
-        return new HorizontalLayout(guardarBtn,cancelarBtn);
+        HorizontalLayout btnsLayout =  new HorizontalLayout();
+        btnsLayout.setPadding(true);
+        btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btnsLayout.add(cancelarBtn,guardarBtn);
+
+        return btnsLayout;
     }
 
     public void setAlumno(Alumno alumno) {
