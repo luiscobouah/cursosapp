@@ -1,9 +1,11 @@
 package com.uah.es.views.cursos;
 
+//https://vaadin.com/components/vaadin-ordered-layout/java-examples
+
 import com.uah.es.model.Curso;
 import com.uah.es.service.ICursosService;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -13,6 +15,7 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -37,30 +40,28 @@ public class CursosView extends Div {
     TextField nombreFiltro = new TextField();
     TextField profesorFiltro = new TextField();
     Select<String> categoriaFiltro = new Select<>();
-    Button buscarBtn = new Button(new Icon(VaadinIcon.SEARCH));
+    Button buscarBtn = new Button("Buscar");
+    Button mostrarTodosBtn = new Button("Mostrar todos");
     Button nuevoCursoBtn = new Button("Nuevo curso");
     Dialog formularioDg = new Dialog();
 
     Notification notificationOk = new Notification("Se han guardado correctamente los datos de curso", 3000);
     Notification notificationKo = new Notification("Error al guardar el curso", 3000);
 
-    String filtro;
-
     public CursosView(ICursosService cursosService) {
 
         this.cursosService = cursosService;
         addClassName("cursos-view");
-        configurarGrid();
-        configurarBuscador();
-        configurarFormulario();
-        add(nombreFiltro,profesorFiltro,categoriaFiltro,buscarBtn,nuevoCursoBtn,grid);
+        HorizontalLayout layout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
+        add(layout,configurarGrid());
+
     }
 
     /**
      * Configuracion del grid y sus columnas.
      *
      */
-    private void configurarGrid() {
+    private Component configurarGrid() {
 
         //Se obtienen todos los alumnos
         Curso[] listaCursos = cursosService.buscarTodos();
@@ -109,23 +110,27 @@ public class CursosView extends Div {
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(12);
         grid.setItems(listaCursos);
+
+        return grid;
     }
 
     /**
      * Configuracion del buscador.
      *
      */
-    private void configurarBuscador() {
+    private Component configurarBuscador() {
+
+        HorizontalLayout horizontalLayout = new HorizontalLayout();
 
         // Configuracion del filtro para buscar por nombre
         nombreFiltro.setLabel("Nombre");
-        nombreFiltro.setWidth("20%");
+        nombreFiltro.setWidth("30%");
         nombreFiltro.setClearButtonVisible(true);
         nombreFiltro.setValueChangeMode(ValueChangeMode.EAGER);
 
         // Configuracion del filtro para buscar por profesor
         profesorFiltro.setLabel("Profesor");
-        profesorFiltro.setWidth("20%");
+        profesorFiltro.setWidth("30%");
         profesorFiltro.setClearButtonVisible(true);
         profesorFiltro.setValueChangeMode(ValueChangeMode.EAGER);
 
@@ -150,23 +155,50 @@ public class CursosView extends Div {
             nombreFiltro.setEnabled(categoriaFiltro.getValue().isEmpty());
             profesorFiltro.setEnabled(categoriaFiltro.getValue().isEmpty());
         });
+
+        buscarBtn.getStyle().set("cursor", "pointer");
+        buscarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         buscarBtn.addClickListener(e -> filtrar());
+
+        mostrarTodosBtn.getStyle().set("cursor", "pointer");
+        mostrarTodosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        mostrarTodosBtn.addClickListener(e -> {
+            nombreFiltro.clear();
+            profesorFiltro.clear();
+            categoriaFiltro.clear();
+            actualizarGrid();
+        });
+
+        HorizontalLayout layoutBtns = new HorizontalLayout();
+        layoutBtns.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
+        layoutBtns.add(buscarBtn,mostrarTodosBtn);
+
+        horizontalLayout.add(nombreFiltro,profesorFiltro,categoriaFiltro,layoutBtns);
+        return horizontalLayout;
     }
 
     /**
      * Configuracion del formulario para el alta de un nuevo alumno.
      *
      */
-    private void configurarFormulario(){
+    private Component configurarFormulario(){
 
         cursoForm = new CursoForm();
         cursoForm.addListener(CursoForm.GuardarEvent.class, this::guardarCurso);
         cursoForm.addListener(CursoForm.CerrarEvent.class, e -> cerrarFormulario());
         formularioDg.add(cursoForm);
 
+        nuevoCursoBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         nuevoCursoBtn.addClickListener(event -> {
             formularioDg.open();
         });
+
+        HorizontalLayout layoutBtn = new HorizontalLayout();
+        layoutBtn.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
+        layoutBtn.getElement().getStyle().set("margin-left", "auto");
+        layoutBtn.add(nuevoCursoBtn);
+
+        return layoutBtn;
     }
 
     /**
@@ -176,22 +208,19 @@ public class CursosView extends Div {
     private void filtrar() {
         Curso[] cursos = new Curso[0];
 
-        System.out.println("nombre:"+nombreFiltro.getValue());
-        System.out.println("profesor:"+profesorFiltro.getValue());
-        System.out.println("categoria:"+categoriaFiltro.getValue());
+        String nombre = nombreFiltro.getValue();
+        String profesor = profesorFiltro.getValue();
+        String categoria = categoriaFiltro.getValue();
 
-       if(nombreFiltro.getValue() != null){
-            cursos =  cursosService.buscarCursosPorNombre(nombreFiltro.getValue());
+        if(nombre!=""){
+            cursos =  cursosService.buscarCursosPorNombre(nombre);
         }
-
-        if(profesorFiltro.getValue() != null){
-            cursos =  cursosService.buscarCursosPorProfesor(profesorFiltro.getValue());
+        if(profesor!=""){
+            cursos =  cursosService.buscarCursosPorProfesor(profesor);
         }
-
-        if(categoriaFiltro.getValue() != null){
-            cursos =  cursosService.buscarCursosPorCategoria(categoriaFiltro.getValue());
+        if(categoria!=""){
+            cursos =  cursosService.buscarCursosPorCategoria(categoria);
         }
-
         if (cursos!=null){
             grid.setItems(cursos);
         }
