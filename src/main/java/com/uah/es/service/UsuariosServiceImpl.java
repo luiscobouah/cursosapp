@@ -1,5 +1,6 @@
 package com.uah.es.service;
 
+import com.uah.es.model.Curso;
 import com.uah.es.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,68 +12,75 @@ public class UsuariosServiceImpl implements IUsuariosService {
     @Autowired
     RestTemplate template;
 
-    String url = "http://localhost:8090/api/zusuarios/usuarios";
+    String url = "http://localhost:8003/usuarios";
 
-   /* @Override
-    public Page<Usuario> buscarTodos(Pageable pageable) {
-        Usuario[] cursos = template.getForObject(url, Usuario[].class);
-        List<Usuario> usuariosList = Arrays.asList(cursos);
-
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<Usuario> list;
-
-        if (usuariosList.size() < startItem) {
-            list = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, usuariosList.size());
-            list = usuariosList.subList(startItem, toIndex);
-        }
-
-        Page<Usuario> page = new PageImpl<>(list, PageRequest.of(currentPage, pageSize), usuariosList.size());
-        return page;
-    }*/
+    @Override
+    public Usuario[] buscarTodos() {
+        return template.getForObject(url, Usuario[].class);
+    }
 
 
     @Override
     public Usuario buscarUsuarioPorId(Integer idUsuario) {
-        Usuario usuario = template.getForObject(url + "/" + idUsuario, Usuario.class);
-        return usuario;
+        return template.getForObject(url + "/" + idUsuario, Usuario.class);
     }
 
     @Override
     public Usuario buscarUsuarioPorNombre(String nombre) {
-        Usuario usuario = template.getForObject(url+"/nombre/"+nombre, Usuario.class);
-        return usuario;
+        return template.getForObject(url+"/nombre/"+nombre, Usuario.class);
     }
 
     @Override
     public Usuario buscarUsuarioPorCorreo(String correo) {
-        Usuario usuario = template.getForObject(url+"/correo/"+correo, Usuario.class);
-        return usuario;
+        return template.getForObject(url+"/correo/"+correo, Usuario.class);
     }
 
     @Override
     public Usuario login(String correo, String clave) {
-        Usuario usuario = template.getForObject(url+"/login/"+correo+"/"+clave, Usuario.class);
-        return usuario;
-
+        return template.getForObject(url+"/login/"+correo+"/"+clave, Usuario.class);
     }
 
     @Override
-    public void guardarUsuario(Usuario usuario) {
-        if (usuario.getIdUsuario() != null && usuario.getIdUsuario() > 0) {
-            template.put(url, usuario);
-        } else {
-            usuario.setIdUsuario(0);
-            template.postForObject(url, usuario, String.class);
+    public boolean guardarUsuario(Usuario usuario) {
+
+        boolean result = false;
+        usuario.setIdUsuario(0);
+        try {
+            template.postForEntity(url, usuario, String.class);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
+
+        return result;
     }
 
     @Override
-    public void eliminarUsuario(Integer idUsuario) {
-        template.delete(url+"/"+idUsuario);
+    public boolean actualizarUsuario(Usuario usuario) {
+
+        boolean result = false;
+        try {
+            template.put(url, usuario);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean eliminarUsuario(Integer idUsuario) {
+        boolean result = false;
+
+        try {
+            template.delete(url+"/"+idUsuario);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return result;
     }
 
  }

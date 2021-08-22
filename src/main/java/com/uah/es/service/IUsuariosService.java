@@ -5,7 +5,7 @@ import com.uah.es.model.Usuario;
 
 public interface IUsuariosService {
 
-    //Page<Usuario> buscarTodos(Pageable pageable);
+    Usuario[] buscarTodos();
 
     Usuario buscarUsuarioPorId(Integer idUsuario);
 
@@ -15,8 +15,10 @@ public interface IUsuariosService {
 
     Usuario login(String correo, String clave);
 
-    void guardarUsuario(Usuario usuario);
+    boolean guardarUsuario(Usuario usuario);
 
-    void eliminarUsuario(Integer idUsuario);
+    boolean actualizarUsuario(Usuario usuario);
+
+    boolean eliminarUsuario(Integer idUsuario);
 
 }

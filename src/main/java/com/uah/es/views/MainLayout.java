@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.uah.es.views.usuarios.UsuariosView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Text;
@@ -120,11 +121,11 @@ public class MainLayout extends AppLayout {
 
     private List<Tab> createMenuItems() {
         MenuItemInfo[] menuItems = new MenuItemInfo[]{ //
-                new MenuItemInfo("Cursos", "la la-book-open", CursosView.class), //
-
+                new MenuItemInfo("Cursos", "la la-book-open", CursosView.class),
                 new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class), //
-
+                new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class), //
         };
+
         List<Tab> tabs = new ArrayList<>();
         for (MenuItemInfo menuItemInfo : menuItems) {
             tabs.add(createTab(menuItemInfo));

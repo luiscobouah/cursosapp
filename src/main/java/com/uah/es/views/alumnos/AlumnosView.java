@@ -98,7 +98,7 @@ public class AlumnosView extends Div {
         .setTextAlign(ColumnTextAlign.CENTER);
 
         // Número max de elementos a visualizar en cada página del grid
-        grid.setPageSize(12);
+        grid.setPageSize(10);
         obtenerTodosAlumnos();
         layoutGrid.add(grid);
 

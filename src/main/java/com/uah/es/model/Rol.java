@@ -3,10 +3,14 @@ package com.uah.es.model;
 public class Rol {
 
     private Integer idRol;
-
     private String authority;
 
     public Rol() {
+    }
+
+    public Rol(Integer idRol, String authority) {
+        this.idRol = idRol;
+        this.authority = authority;
     }
 
     public Rol(String idRolAndName){
