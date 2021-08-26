@@ -73,7 +73,9 @@ public class AlumnosView extends Div {
             cursosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             cursosBtn.addClickListener(e -> verListadoCursos(item));
             return cursosBtn;
-        }).setHeader("Cursos").setAutoWidth(true);
+        })
+        .setHeader("Cursos")
+        .setAutoWidth(true);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -114,7 +116,7 @@ public class AlumnosView extends Div {
         HorizontalLayout buscadorLayout = new HorizontalLayout();
 
         // Configuracion del filtro para buscar por correo
-        correoFiltro.setLabel("Correo electrónico");
+        correoFiltro.setLabel("Correo");
         correoFiltro.setWidth("30%");
         correoFiltro.setClearButtonVisible(true);
         correoFiltro.setValueChangeMode(ValueChangeMode.EAGER);

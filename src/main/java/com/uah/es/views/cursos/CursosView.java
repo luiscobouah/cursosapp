@@ -3,7 +3,11 @@ package com.uah.es.views.cursos;
 //https://vaadin.com/components/vaadin-ordered-layout/java-examples
 
 import com.uah.es.model.Curso;
+import com.uah.es.model.Matricula;
+import com.uah.es.model.Usuario;
 import com.uah.es.service.ICursosService;
+import com.uah.es.service.IMatriculasService;
+import com.uah.es.service.IUsuariosService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
@@ -11,6 +15,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -26,17 +31,24 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.PageTitle;
 import com.uah.es.views.MainLayout;
 import com.vaadin.flow.router.RouteAlias;
+import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
 
+import javax.annotation.security.RolesAllowed;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Objects;
 
 @PageTitle("Cursos")
 @Route(value = "cursos", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
+@Secured("ROLE_Admin")
 public class CursosView extends Div {
 
-    //Servicio para comunicación con el backend
+    //Servicios para comunicación con el backend
     ICursosService cursosService;
+    IMatriculasService matriculasService;
+    IUsuariosService usuariosService;
 
     //Componentes visuales
     CursoForm cursoForm;
@@ -50,9 +62,11 @@ public class CursosView extends Div {
     Dialog formularioDg = new Dialog();
     Notification notificacion = new Notification("", 3000);
 
-    public CursosView(ICursosService cursosService) {
+    public CursosView(ICursosService cursosService, IMatriculasService matriculasService, IUsuariosService usuariosService) {
 
         this.cursosService = cursosService;
+        this.matriculasService =  matriculasService;
+        this.usuariosService =  usuariosService;
 
         addClassName("cursos-view");
         HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
@@ -73,8 +87,8 @@ public class CursosView extends Div {
         grid.addColumn(Curso::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Curso::getDuracion).setHeader("Duración").setKey("duracion").setSortable(true);
         grid.addColumn(Curso::getProfesor).setHeader("Profesor").setKey("profesor").setSortable(true).setAutoWidth(true);
-        grid.addColumn(Curso::getPrecio).setHeader("Precio").setKey("precio").setSortable(true);
-        grid.addColumn(Curso::getCategoria).setHeader("Categoría").setKey("categoria").setSortable(true);
+        grid.addColumn(Curso::getPrecio).setHeader("Precio").setKey("precio").setSortable(true).setAutoWidth(true);;
+        grid.addColumn(Curso::getCategoria).setHeader("Categoría").setKey("categoria").setSortable(true).setAutoWidth(true);;
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -85,7 +99,8 @@ public class CursosView extends Div {
         })
         .setKey("editar")
         .setHeader("Editar")
-        .setTextAlign(ColumnTextAlign.CENTER);
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setAutoWidth(true);;
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.TRASH);
             editarIcon.setColor("red");
@@ -96,7 +111,8 @@ public class CursosView extends Div {
         })
         .setKey("eliminar")
         .setHeader("Eliminar")
-        .setTextAlign(ColumnTextAlign.CENTER);
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setAutoWidth(true);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
             editarIcon.setColor("blue");
@@ -107,7 +123,8 @@ public class CursosView extends Div {
         })
         .setKey("matricular")
         .setHeader("Matricular")
-        .setTextAlign(ColumnTextAlign.CENTER);
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setAutoWidth(true);
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
@@ -324,6 +341,14 @@ public class CursosView extends Div {
     }
 
     private void matricularCurso(Curso curso) {
+
+        Usuario usuario =  usuariosService.buscarUsuarioPorId(10);
+        usuario.setRoles(null);
+        Matricula matricula = new Matricula(curso.getIdCurso(),usuario);
+
+        if (matriculasService.guardarMatricula(matricula)) {
+           System.out.println("Matricula guardada");
+        }
 
     }
 

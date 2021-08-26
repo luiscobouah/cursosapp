@@ -6,8 +6,11 @@ import com.uah.es.model.Matricula;
 import com.uah.es.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -26,7 +29,7 @@ public class MatriculasServiceImpl implements IMatriculasService {
     @Autowired
     ICursosService cursosService;
 
-    String url = "http://localhost:8090/api/zusuarios/matriculas";
+    String url = "http://localhost:8003/matriculas";
 
     /*@Override
     public Page<Matricula> buscarTodas(Pageable pageable) {
@@ -75,35 +78,50 @@ public class MatriculasServiceImpl implements IMatriculasService {
     }
 
     @Override
-    public String guardarMatricula(Matricula matricula) {
+    public boolean guardarMatricula(Matricula matricula) {
         if (matricula.getIdMatricula() != null && matricula.getIdMatricula() > 0) {
             //template.put(url, matricula); //peligroso, habría que comprobar la inscripción anterior
-            return "No se puede modificar una matrícula.";
+            //return "No se puede modificar una matrícula.";
+            return false;
         } else {
             //Inscribimos al alumno en el curso
             Usuario usuario = usuariosService.buscarUsuarioPorId(matricula.getUsuario().getIdUsuario());
             Alumno alumno = alumnosService.buscarAlumnoPorCorreo(usuario.getCorreo());
             Curso curso = cursosService.buscarCursoPorId(matricula.getIdCurso());
-            String resultado="";
+            boolean resultado= false;
             //si no existe el alumno, lo creamos
             if(alumno == null) {
                 alumno = new Alumno(usuario.getNombre(), usuario.getCorreo());
                 alumnosService.guardarAlumno(alumno);
-                resultado = "Alumno creado. ";
+                //resultado = "Alumno creado. ";
+                resultado = true;
             } else { //si existe, comprobamos que no se matricula dos veces en el mismo curso
-                resultado = "Alumno encontrado. ";
+                //resultado = "Alumno encontrado. ";
+                resultado = true;
                 List<Curso> cursos = alumno.getCursos();
                 if (cursos.contains(curso)) {
-                    return "El alumno ya existe en el curso!";
+                    resultado = true;
+                    //return "El alumno ya existe en el curso!";
                 }
             }
             alumnosService.inscribirCurso(alumno.getIdAlumno(), matricula.getIdCurso());
+
             //Guardamos la matrícula
             matricula.setPrecio(curso.getPrecio());
             matricula.setIdMatricula(0);
             matricula.setFecha(new Date());
-            template.postForObject(url, matricula, String.class);
-            return resultado + "Los datos de la matricula fueron guardados!";
+
+            try {
+                template.postForObject(url, matricula, String.class);
+
+            } catch (HttpClientErrorException ex){
+
+                System.out.println(ex);
+            }
+
+
+           // return resultado + "Los datos de la matricula fueron guardados!";
+            return resultado;
         }
     }
 

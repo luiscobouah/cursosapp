@@ -73,6 +73,16 @@ public class Usuario {
         this.roles = roles;
     }
 
+    public String getStringRoles() {
+
+        if (this.roles==null){
+            return "";
+        } else {
+            return this.roles.toString().replace("[", "").replace("]", "");
+        }
+
+    }
+
     public List<Matricula> getMatriculas() {
         return matriculas;
     }

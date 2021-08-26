@@ -25,12 +25,14 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
 
 import java.util.Objects;
 
 @PageTitle("Usuarios")
 @Route(value = "usuarios", layout = MainLayout.class)
+@Secured("ROLE_Administrador")
 public class UsuariosView extends Div {
 
     IUsuariosService usuariosService;
@@ -69,7 +71,8 @@ public class UsuariosView extends Div {
         grid.addColumn(Usuario::getIdUsuario).setHeader("ID").setKey("id").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getCorreo).setHeader("Correo").setKey("correo").setSortable(false).setAutoWidth(true);
-        grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false);
+        grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false).setAutoWidth(true);
+        grid.addColumn(Usuario::getStringRoles).setHeader("Roles").setKey("roles").setSortable(false).setAutoWidth(true);
         grid.addComponentColumn(item -> {
                     Icon editarIcon = new Icon(VaadinIcon.CHECK_CIRCLE_O);
                     if(item.isEnable()){
@@ -105,7 +108,8 @@ public class UsuariosView extends Div {
                 })
                 .setKey("eliminar")
                 .setHeader("Eliminar")
-                .setTextAlign(ColumnTextAlign.CENTER);
+                .setTextAlign(ColumnTextAlign.CENTER)
+                .setAutoWidth(true);
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);

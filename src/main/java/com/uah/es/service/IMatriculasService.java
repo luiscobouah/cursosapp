@@ -12,7 +12,7 @@ public interface IMatriculasService {
 
     Matricula buscarMatriculaPorId(Integer idMatricula);
 
-    String guardarMatricula(Matricula matricula);
+    boolean guardarMatricula(Matricula matricula);
 
     void eliminarMatricula(Integer idMatricula);
 

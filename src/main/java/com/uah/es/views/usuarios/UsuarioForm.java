@@ -3,8 +3,6 @@ package com.uah.es.views.usuarios;
 
 import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
-import com.uah.es.service.ICursosService;
-import com.uah.es.service.IRolesService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -23,12 +21,15 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.EmailValidator;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.shared.Registration;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 
+import javax.annotation.security.RolesAllowed;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class UsuarioForm extends FormLayout {
 
@@ -37,7 +38,7 @@ public class UsuarioForm extends FormLayout {
     EmailField correo = new EmailField ("Correo");
     TextField clave = new TextField ("Clave");
     Checkbox estado = new Checkbox();
-    CheckboxGroup<String> roles = new CheckboxGroup<>();
+    CheckboxGroup<Rol> roles = new CheckboxGroup<>();
 
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
@@ -48,32 +49,22 @@ public class UsuarioForm extends FormLayout {
 
     public UsuarioForm(){
 
-        List<Rol> rolesLista = new ArrayList<>();
-
-        Rol rolAdmin = new Rol(1,"Administrador");
-        Rol rolAlumno = new Rol(2,"Alumno");
-        Rol rolProfesor = new Rol(3,"Profesor");
-
-        rolesLista.add(rolAdmin);
-        rolesLista.add(rolAlumno);
-        rolesLista.add(rolProfesor);
-
-        //usuario.setRoles(rolesLista);
-
         estado.setLabel("Activo");
         estado.setValue(false);
 
+        List<Rol> rolesLista = new ArrayList<>();
+        rolesLista.add(new Rol(1,"Administrador"));
+        rolesLista.add(new Rol(2,"Alumno"));
+        rolesLista.add(new Rol(3,"Profesor"));
         roles.setLabel("Rol");
-        roles.setItems("Administrador", "Alumno", "Profesor");
+        roles.setItems(rolesLista);
         roles.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         roles.addValueChangeListener(
                 e -> {
-                    usuario.setRoles(null);
-                    List<Rol> rolesSeleccionados = new ArrayList<>();
-                    for(int i = 0; i < e.getValue().size(); i++) {
-                        rolesSeleccionados.add(rolesLista.get(i));
-                    }
-                    usuario.setRoles(rolesSeleccionados);
+                    //usuario.setRoles(null);
+                    Set<Rol> rolesSeleccionados = e.getValue();
+                    List<Rol> roles = new ArrayList<Rol>(rolesSeleccionados);
+                    usuario.setRoles(roles);
                 }
         );
 
@@ -88,16 +79,13 @@ public class UsuarioForm extends FormLayout {
         binder.forField(clave)
                 .asRequired("Campo requerido")
                 .bind(Usuario::getClave,Usuario::setClave);
-        /*binder.forField(precio)
-                .withNullRepresentation("")
-                .withConverter(new StringToDoubleConverter("No es un precio válido"))
-                .asRequired("Campo requerido")
-                .bind(Curso::getPrecio,Curso::setPrecio);*/
+        /*binder.forField(roles)
+                .asRequired("Campo requerido");*/
         binder.forField(estado)
                 .bind(Usuario::isEnable,Usuario::setEnable);
 
         setMaxWidth("600px");
-        add(nombre,correo,clave,roles,estado,configurarBtnsLayout());
+        add(nombre,correo,clave,estado,roles,configurarBtnsLayout());
     }
 
     private Component configurarBtnsLayout() {
@@ -122,18 +110,16 @@ public class UsuarioForm extends FormLayout {
     }
 
     public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
 
-        System.out.println(usuario.getRoles().size());
+        roles.clear();
+        List<Rol> rolesUsuario = usuario.getRoles();
 
-        if (usuario.getRoles() != null){
-            for(int i = 0; i < usuario.getRoles().size(); i++) {
-                String rol = usuario.getRoles().get(i).getAuthority();
-                System.out.println(rol);
-                roles.setValue(Collections.singleton(rol));
-            }
+        if (rolesUsuario != null){
+            Set<Rol> rolesLista = new HashSet<>(rolesUsuario);
+            roles.setValue(rolesLista);
         }
 
+        this.usuario = usuario;
         binder.readBean(usuario);
     }
 

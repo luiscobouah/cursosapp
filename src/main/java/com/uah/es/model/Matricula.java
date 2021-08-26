@@ -1,5 +1,8 @@
 package com.uah.es.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.util.Date;
 
 public class Matricula {
@@ -7,6 +10,9 @@ public class Matricula {
     private Integer idMatricula;
     private Integer idCurso;
     private Double precio;
+
+    @JsonFormat(pattern="yyyy-MM-dd", locale = "es-ES", timezone = "Europe/Madrid")
+    @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date fecha;
     private Usuario usuario;
 

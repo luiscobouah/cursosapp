@@ -1,5 +1,7 @@
 package com.uah.es.model;
 
+import java.util.Objects;
+
 public class Rol {
 
     private Integer idRol;
@@ -42,4 +44,16 @@ public class Rol {
         return ""+idRol+"-"+this.authority;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Rol)) return false;
+        Rol rol = (Rol) o;
+        return idRol.equals(rol.idRol) && authority.equals(rol.authority);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(idRol, authority);
+    }
 }
