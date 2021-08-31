@@ -74,8 +74,7 @@ public class AlumnosView extends Div {
             cursosBtn.addClickListener(e -> verListadoCursos(item));
             return cursosBtn;
         })
-        .setHeader("Cursos")
-        .setAutoWidth(true);
+        .setHeader("Cursos");
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");

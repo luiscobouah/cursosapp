@@ -21,11 +21,8 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.EmailValidator;
-import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.shared.Registration;
-import org.springframework.security.access.annotation.Secured;
 
-import javax.annotation.security.RolesAllowed;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,9 +50,9 @@ public class UsuarioForm extends FormLayout {
         estado.setValue(false);
 
         List<Rol> rolesLista = new ArrayList<>();
-        rolesLista.add(new Rol(1,"Administrador"));
-        rolesLista.add(new Rol(2,"Alumno"));
-        rolesLista.add(new Rol(3,"Profesor"));
+        rolesLista.add(new Rol(1,"ROLE_ADMIN"));
+        rolesLista.add(new Rol(2,"ROLE_USER"));
+        rolesLista.add(new Rol(3,"ROLE_TEACHER"));
         roles.setLabel("Rol");
         roles.setItems(rolesLista);
         roles.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
