@@ -16,14 +16,23 @@ public class ConfigureUIServiceInitListener implements VaadinServiceInitListener
     public void serviceInit(ServiceInitEvent event) {
         event.getSource().addUIInitListener(uiEvent -> {
             final UI ui = uiEvent.getUI();
-            ui.addBeforeEnterListener(this::authenticateNavigation);
+            ui.addBeforeEnterListener(this::beforeEnter); // (2)
         });
     }
 
-    private void authenticateNavigation(BeforeEnterEvent event) {
-        if (!LoginView.class.equals(event.getNavigationTarget())
-                && !SecurityUtils.isUserLoggedIn()) {
-            event.rerouteTo(LoginView.class);
+    /**
+     * Reroutes the user if (s)he is not authorized to access the view.
+     *
+     * @param event
+     *            before navigation event with event details
+     */
+    private void beforeEnter(BeforeEnterEvent event) {
+        if(!SecurityUtils.isAccessGranted(event.getNavigationTarget())) { // (1)
+            if(SecurityUtils.isUserLoggedIn()) { // (2)
+                event.rerouteToError(NotFoundException.class); // (3)
+            } else {
+                event.rerouteTo(LoginView.class); // (4)
+            }
         }
     }
 }

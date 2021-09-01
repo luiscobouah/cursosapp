@@ -143,7 +143,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     public void guardarUsuario(Usuario usuario) {
 
         List<Rol> rolesLista = new ArrayList<>();
-        rolesLista.add(new Rol(2,"ROLE_USER"));
+        rolesLista.add(new Rol(2,"Alumno"));
         usuario.setRoles(rolesLista);
         usuario.setEnable(true);
 

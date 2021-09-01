@@ -70,7 +70,16 @@ public class AlumnosServiceImpl implements IAlumnosService {
     }
 
     @Override
-    public void inscribirCurso(Integer idAlumno, Integer idCurso) {
-        template.getForObject(url+"/insc/"+idAlumno+"/"+idCurso, String.class);
+    public boolean inscribirCurso(Integer idAlumno, Integer idCurso) {
+        boolean result = false;
+
+        try {
+            template.getForObject(url+"/insc/"+idAlumno+"/"+idCurso, String.class);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return result;
     }
 }

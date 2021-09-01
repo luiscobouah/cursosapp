@@ -2,7 +2,6 @@ package com.uah.es.views.usuarios;
 
 
 import com.uah.es.model.Usuario;
-import com.uah.es.service.IRolesService;
 import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.MainLayout;
 import com.vaadin.flow.component.Component;
@@ -24,7 +23,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
 
@@ -32,7 +30,7 @@ import java.util.Objects;
 
 @PageTitle("Usuarios")
 @Route(value = "usuarios", layout = MainLayout.class)
-@Secured("ROLE_Administrador")
+@Secured("Admin")
 public class UsuariosView extends Div {
 
     IUsuariosService usuariosService;
@@ -47,11 +45,15 @@ public class UsuariosView extends Div {
     Button mostrarTodosBtn = new Button("Mostrar todos");
     Button nuevoUsuarioBtn = new Button("Nuevo usuario",new Icon(VaadinIcon.PLUS));
     Dialog formularioDg = new Dialog();
-    Notification notificacion = new Notification("", 3000);
+    Notification notificacionOK = new Notification("", 3000);
+    Notification notificacionKO = new Notification("", 3000);
 
     public UsuariosView(IUsuariosService usuariosService) {
 
         this.usuariosService = usuariosService;
+
+        notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
         addClassName("cursos-view");
         HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
@@ -245,13 +247,11 @@ public class UsuariosView extends Div {
         }
 
         if(resultado){
-            notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            notificacion.setText("Se ha guardado correctamente el usuario");
-            notificacion.open();
+            notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            notificacionOK.open();
         } else {
-            notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            notificacion.setText("Error al guardar el usuario");
-            notificacion.open();
+            notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notificacionKO.open();
         }
         obtenerTodosUsuarios();
         cerrarFormulario();
@@ -288,13 +288,11 @@ public class UsuariosView extends Div {
         eliminarBtn.addClickListener(click -> {
 
             if(usuariosService.eliminarUsuario(usuario.getIdUsuario())){
-                notificacion.setText("Se ha eliminado correctamente el usuario");
-                notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                notificacion.open();
+                notificacionOK.setText("Se ha eliminado correctamente el usuario");
+                notificacionOK.open();
             } else {
-                notificacion.setText("Error al eliminar el usuario");
-                notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                notificacion.open();
+                notificacionKO.setText("Error al eliminar el usuario");
+                notificacionKO.open();
             }
 
             confirmacionDg.close();

@@ -31,46 +31,6 @@ public class MatriculasServiceImpl implements IMatriculasService {
 
     String url = "http://localhost:8003/matriculas";
 
-    /*@Override
-    public Page<Matricula> buscarTodas(Pageable pageable) {
-        Matricula[] matriculas = template.getForObject(url, Matricula[].class);
-        List<Matricula> matriculasList = Arrays.asList(matriculas);
-
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<Matricula> list;
-
-        if(matriculasList.size() < startItem) {
-            list = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, matriculasList.size());
-            list = matriculasList.subList(startItem, toIndex);
-        }
-        Page<Matricula> page = new PageImpl<>(list, PageRequest.of(currentPage, pageSize), matriculasList.size());
-        return page;
-    }*/
-
-    /*@Override
-    public Page<Matricula> buscarMatriculasPorIdCurso(Integer idCurso, Pageable pageable) {
-        Matricula[] matriculas = template.getForObject(url+"/curso/"+idCurso, Matricula[].class);
-        List<Matricula> matriculasList = Arrays.asList(matriculas);
-
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<Matricula>list;
-
-        if(matriculasList.size() <startItem) {
-            list = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, matriculasList.size());
-            list = matriculasList.subList(startItem, toIndex);
-        }
-        Page<Matricula> page = new PageImpl<>(list, PageRequest.of(currentPage, pageSize), matriculasList.size());
-        return page;
-    }*/
-
     @Override
     public Matricula buscarMatriculaPorId(Integer idMatricula) {
         Matricula matricula = template.getForObject(url+"/"+idMatricula, Matricula.class);
@@ -79,6 +39,8 @@ public class MatriculasServiceImpl implements IMatriculasService {
 
     @Override
     public boolean guardarMatricula(Matricula matricula) {
+        boolean resultado= false;
+
         if (matricula.getIdMatricula() != null && matricula.getIdMatricula() > 0) {
             //template.put(url, matricula); //peligroso, habría que comprobar la inscripción anterior
             //return "No se puede modificar una matrícula.";
@@ -88,39 +50,34 @@ public class MatriculasServiceImpl implements IMatriculasService {
             Usuario usuario = usuariosService.buscarUsuarioPorId(matricula.getUsuario().getIdUsuario());
             Alumno alumno = alumnosService.buscarAlumnoPorCorreo(usuario.getCorreo());
             Curso curso = cursosService.buscarCursoPorId(matricula.getIdCurso());
-            boolean resultado= false;
-            //si no existe el alumno, lo creamos
-            if(alumno == null) {
-                alumno = new Alumno(usuario.getNombre(), usuario.getCorreo());
-                alumnosService.guardarAlumno(alumno);
-                //resultado = "Alumno creado. ";
-                resultado = true;
-            } else { //si existe, comprobamos que no se matricula dos veces en el mismo curso
-                //resultado = "Alumno encontrado. ";
-                resultado = true;
-                List<Curso> cursos = alumno.getCursos();
-                if (cursos.contains(curso)) {
-                    resultado = true;
-                    //return "El alumno ya existe en el curso!";
-                }
-            }
-            alumnosService.inscribirCurso(alumno.getIdAlumno(), matricula.getIdCurso());
-
-            //Guardamos la matrícula
-            matricula.setPrecio(curso.getPrecio());
-            matricula.setIdMatricula(0);
-            matricula.setFecha(new Date());
-
             try {
-                template.postForObject(url, matricula, String.class);
+                //si no existe el alumno, lo creamos
+                if(alumno == null) {
+                    alumno = new Alumno(usuario.getNombre(), usuario.getCorreo());
+                    alumnosService.guardarAlumno(alumno);
 
+                    //si existe, comprobamos que no se matricula dos veces en el mismo curso
+                } else {
+                    List<Curso> cursos = alumno.getCursos();
+                    //el alumno ya existe en el curso.
+                    if (cursos.contains(curso)) {
+                        //El alumno ya existe en el curso.
+                        resultado = false;
+                    //el alumno no existe en el curso.
+                    } else {
+                        // inscribimos el curso
+                        alumnosService.inscribirCurso(alumno.getIdAlumno(), matricula.getIdCurso());
+                        //Guardamos la matrícula
+                        matricula.setPrecio(curso.getPrecio());
+                        matricula.setIdMatricula(0);
+                        matricula.setFecha(new Date());
+                        template.postForObject(url, matricula, String.class);
+                        resultado = true;
+                    }
+                }
             } catch (HttpClientErrorException ex){
-
-                System.out.println(ex);
+                resultado = false;
             }
-
-
-           // return resultado + "Los datos de la matricula fueron guardados!";
             return resultado;
         }
     }

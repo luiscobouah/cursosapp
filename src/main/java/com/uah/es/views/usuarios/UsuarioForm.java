@@ -50,9 +50,9 @@ public class UsuarioForm extends FormLayout {
         estado.setValue(false);
 
         List<Rol> rolesLista = new ArrayList<>();
-        rolesLista.add(new Rol(1,"ROLE_ADMIN"));
-        rolesLista.add(new Rol(2,"ROLE_USER"));
-        rolesLista.add(new Rol(3,"ROLE_TEACHER"));
+        rolesLista.add(new Rol(1,"Admin"));
+        rolesLista.add(new Rol(2,"Alumno"));
+        rolesLista.add(new Rol(3,"Profesor"));
         roles.setLabel("Rol");
         roles.setItems(rolesLista);
         roles.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);

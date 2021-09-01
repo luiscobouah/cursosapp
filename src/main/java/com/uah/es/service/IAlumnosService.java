@@ -18,5 +18,5 @@ public interface IAlumnosService {
 
     boolean eliminarAlumno(Integer idAlumno);
 
-    void inscribirCurso(Integer idAlumno, Integer idCurso);
+    boolean inscribirCurso(Integer idAlumno, Integer idCurso);
 }

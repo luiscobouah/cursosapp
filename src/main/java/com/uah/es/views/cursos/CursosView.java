@@ -2,12 +2,15 @@ package com.uah.es.views.cursos;
 
 //https://vaadin.com/components/vaadin-ordered-layout/java-examples
 
+import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
 import com.uah.es.model.Matricula;
 import com.uah.es.model.Usuario;
+import com.uah.es.service.IAlumnosService;
 import com.uah.es.service.ICursosService;
 import com.uah.es.service.IMatriculasService;
 import com.uah.es.service.IUsuariosService;
+import com.uah.es.views.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
@@ -15,7 +18,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -27,28 +29,28 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.PageTitle;
-import com.uah.es.views.MainLayout;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
 
-import javax.annotation.security.RolesAllowed;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+
+import static com.uah.es.security.SecurityUtils.getEmailUser;
+import static com.uah.es.security.SecurityUtils.userHasRole;
 
 @PageTitle("Cursos")
 @Route(value = "cursos", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@Secured("ROLE_Admin")
 public class CursosView extends Div {
 
     //Servicios para comunicación con el backend
     ICursosService cursosService;
     IMatriculasService matriculasService;
     IUsuariosService usuariosService;
+    IAlumnosService alumnosService;
 
     //Componentes visuales
     CursoForm cursoForm;
@@ -58,15 +60,31 @@ public class CursosView extends Div {
     Select<String> categoriaFiltro = new Select<>();
     Button buscarBtn = new Button("Buscar");
     Button mostrarTodosBtn = new Button("Mostrar todos");
+    Button mostrarMisCurosBtn = new Button("Mostrar mis cursos");
     Button nuevoCursoBtn = new Button("Nuevo curso",new Icon(VaadinIcon.PLUS));
     Dialog formularioDg = new Dialog();
-    Notification notificacion = new Notification("", 3000);
+    Notification notificacionOK = new Notification("", 3000);
+    Notification notificacionKO = new Notification("", 3000);
 
-    public CursosView(ICursosService cursosService, IMatriculasService matriculasService, IUsuariosService usuariosService) {
+    List<Curso> listaMisCursos;
+    Alumno alumno;
+
+    public CursosView(
+            ICursosService cursosService,
+            IMatriculasService matriculasService,
+            IUsuariosService usuariosService,
+            IAlumnosService alumnosService) {
 
         this.cursosService = cursosService;
         this.matriculasService =  matriculasService;
         this.usuariosService =  usuariosService;
+        this.alumnosService = alumnosService;
+
+        notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+        alumno = alumnosService.buscarAlumnoPorCorreo(getEmailUser());
+        listaMisCursos = alumno.getCursos();
 
         addClassName("cursos-view");
         HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
@@ -100,7 +118,8 @@ public class CursosView extends Div {
         .setKey("editar")
         .setHeader("Editar")
         .setTextAlign(ColumnTextAlign.CENTER)
-        .setAutoWidth(true);;
+        .setAutoWidth(true)
+        .setVisible(userHasRole(Collections.singletonList("Admin")));
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.TRASH);
             editarIcon.setColor("red");
@@ -112,10 +131,16 @@ public class CursosView extends Div {
         .setKey("eliminar")
         .setHeader("Eliminar")
         .setTextAlign(ColumnTextAlign.CENTER)
-        .setAutoWidth(true);
+        .setAutoWidth(true)
+        .setVisible(userHasRole(Collections.singletonList("Admin")));
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
-            editarIcon.setColor("blue");
+            if (listaMisCursos.contains(item)){
+                editarIcon.setColor("gray");
+                editarIcon.setVisible(false);
+            } else {
+                editarIcon.setColor("blue");
+            }
             editarIcon.getStyle().set("cursor", "pointer");
             editarIcon.setSize("18px");
             editarIcon.addClickListener(e -> matricularCurso(item));
@@ -124,7 +149,8 @@ public class CursosView extends Div {
         .setKey("matricular")
         .setHeader("Matricular")
         .setTextAlign(ColumnTextAlign.CENTER)
-        .setAutoWidth(true);
+        .setAutoWidth(true)
+        .setVisible(userHasRole(Collections.singletonList("Alumno")));
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
@@ -186,15 +212,42 @@ public class CursosView extends Div {
         mostrarTodosBtn.getStyle().set("cursor", "pointer");
         mostrarTodosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarTodosBtn.addClickListener(e -> {
+            //Limpiar los buscadores
             nombreFiltro.clear();
             profesorFiltro.clear();
             categoriaFiltro.setValue("");
+            // Habilitar los buscadores
+            nombreFiltro.setEnabled(true);
+            profesorFiltro.setEnabled(true);
+            categoriaFiltro.setEnabled(true);
+            // Mostrar la columna Matricular
+            if(userHasRole(Collections.singletonList("Alumno"))){
+                grid.getColumnByKey("matricular").setVisible(true);
+            }
             obtenerTodosCursos();
+        });
+
+        mostrarMisCurosBtn.setVisible(userHasRole(Collections.singletonList("Alumno")));
+        mostrarMisCurosBtn.getStyle().set("cursor", "pointer");
+        mostrarMisCurosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        mostrarMisCurosBtn.addClickListener(e -> {
+            // Limpiar los buscadores
+            nombreFiltro.clear();
+            profesorFiltro.clear();
+            categoriaFiltro.setValue("");
+            // Deshabilitar los buscadores
+            nombreFiltro.setEnabled(false);
+            profesorFiltro.setEnabled(false);
+            categoriaFiltro.setEnabled(false);
+            // Mostrar la columna Matricula
+            grid.getColumnByKey("matricular").setVisible(false);
+
+            obtenerMisCursos();
         });
 
         HorizontalLayout layoutBtns = new HorizontalLayout();
         layoutBtns.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
-        layoutBtns.add(buscarBtn,mostrarTodosBtn);
+        layoutBtns.add(buscarBtn,mostrarTodosBtn,mostrarMisCurosBtn);
 
         buscadorLayout.add(nombreFiltro,profesorFiltro,categoriaFiltro,layoutBtns);
         return buscadorLayout;
@@ -220,6 +273,7 @@ public class CursosView extends Div {
         layoutBtn.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         layoutBtn.getElement().getStyle().set("margin-left", "auto");
         layoutBtn.add(nuevoCursoBtn);
+        nuevoCursoBtn.setVisible(userHasRole(Collections.singletonList("Admin")));
 
         return layoutBtn;
     }
@@ -259,6 +313,15 @@ public class CursosView extends Div {
     }
 
     /**
+     * Función para actualizar el grid con todos los cursos del alumno.
+     *
+     */
+    private void obtenerMisCursos() {
+        listaMisCursos = alumno.getCursos();
+        grid.setItems(listaMisCursos);
+    }
+
+    /**
      * Función para crear o actualizar los datos de un curso.
      *
      */
@@ -274,13 +337,11 @@ public class CursosView extends Div {
         }
 
         if(resultado){
-            notificacion.setText("Se ha guardado correctamente el curso");
-            notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            notificacion.open();
+            notificacionOK.setText("Se ha guardado correctamente el curso");
+            notificacionOK.open();
         } else {
-            notificacion.setText("Error al guardar el curso");
-            notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            notificacion.open();
+            notificacionKO.setText("Error al guardar el curso");
+            notificacionKO.open();
         }
         obtenerTodosCursos();
         cerrarFormulario();
@@ -317,13 +378,11 @@ public class CursosView extends Div {
         eliminarBtn.addClickListener(click -> {
 
             if(cursosService.eliminarCurso(curso.getIdCurso())){
-                notificacion.setText("Se ha eliminado correctamente el curso");
-                notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                notificacion.open();
+                notificacionOK.setText("Se ha eliminado correctamente el curso");
+                notificacionOK.open();
             } else {
-                notificacion.setText("Error al eliminar el curso");
-                notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                notificacion.open();
+                notificacionKO.setText("Error al eliminar el curso");
+                notificacionKO.open();
             }
 
             confirmacionDg.close();
@@ -340,16 +399,23 @@ public class CursosView extends Div {
         confirmacionDg.open();
     }
 
+    /**
+     * Función para matricular el alumno en el curso.
+     *
+     */
     private void matricularCurso(Curso curso) {
 
-        Usuario usuario =  usuariosService.buscarUsuarioPorId(10);
+        Usuario usuario =  usuariosService.buscarUsuarioPorCorreo(getEmailUser());
         usuario.setRoles(null);
         Matricula matricula = new Matricula(curso.getIdCurso(),usuario);
 
-        if (matriculasService.guardarMatricula(matricula)) {
-           System.out.println("Matricula guardada");
+        if(matriculasService.guardarMatricula(matricula)){
+            notificacionOK.setText("Se ha matriculado correctamente en el curso");
+            notificacionOK.open();
+        } else {
+            notificacionKO.setText("Error al matricularse en el curso");
+            notificacionKO.open();
         }
-
     }
 
     /**

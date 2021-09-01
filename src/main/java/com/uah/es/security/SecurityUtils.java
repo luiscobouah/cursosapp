@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -19,6 +20,35 @@ public final class SecurityUtils {
 
     private SecurityUtils() {
         // Util methods only
+    }
+
+    public static boolean isAccessGranted(Class<?> securedClass) {
+        // Allow if no roles are required.
+        Secured secured = AnnotationUtils.findAnnotation(securedClass, Secured.class);
+        if (secured == null) {
+            return true; // (1)
+        }
+
+        // lookup needed role in user roles
+        List<String> allowedRoles = Arrays.asList(secured.value());
+        Authentication userAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        return userAuthentication.getAuthorities().stream() // (2)
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(allowedRoles::contains);
+    }
+
+    public static boolean userHasRole(List<String> roles){
+
+        Authentication userAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        return userAuthentication.getAuthorities().stream() // (2)
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(roles::contains);
+
+    }
+
+    public  static String getEmailUser(){
+        Authentication userAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        return userAuthentication.getName();
     }
 
     static boolean isFrameworkInternalRequest(HttpServletRequest request) {

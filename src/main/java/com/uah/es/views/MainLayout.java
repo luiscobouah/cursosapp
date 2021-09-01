@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.uah.es.security.SecurityUtils;
 import com.uah.es.views.usuarios.UsuariosView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
@@ -65,6 +66,7 @@ public class MainLayout extends AppLayout {
 
     private final Tabs menu;
     private H1 viewTitle;
+    //private AccessAnnotationChecker accessChecker;
 
     public MainLayout() {
         setPrimarySection(Section.DRAWER);
@@ -128,7 +130,11 @@ public class MainLayout extends AppLayout {
 
         List<Tab> tabs = new ArrayList<>();
         for (MenuItemInfo menuItemInfo : menuItems) {
-            tabs.add(createTab(menuItemInfo));
+
+            //Verificamos si el usuario tiene el rol que permita visualizar la vista
+            if (SecurityUtils.isAccessGranted(menuItemInfo.getView())){
+                tabs.add(createTab(menuItemInfo));
+            }
 
         }
         return tabs;

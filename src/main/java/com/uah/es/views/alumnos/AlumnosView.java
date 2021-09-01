@@ -22,6 +22,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
 
 /*https://vaadin.com/directory/component/grid-pagination/samples*/
@@ -29,6 +30,7 @@ import org.vaadin.klaudeta.PaginatedGrid;
 
 @PageTitle("Alumnos")
 @Route(value = "alumnos", layout = MainLayout.class)
+@Secured("Admin")
 public class AlumnosView extends Div {
 
     //Servicio para comunicación con el backend
@@ -42,11 +44,15 @@ public class AlumnosView extends Div {
     Button mostrarTodosBtn = new Button("Mostrar todos");
     Button nuevoAlumnoBtn = new Button("Nuevo Alumno");
     Dialog formularioDg = new Dialog();
-    Notification notificacion = new Notification("", 3000);
+    Notification notificacionOK = new Notification("", 3000);
+    Notification notificacionKO = new Notification("", 3000);
 
     public AlumnosView(IAlumnosService alumnosService) {
 
         this.alumnosService = alumnosService;
+
+        notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
         addClassName("usuarios-view");
         configurarFormulario();
@@ -199,13 +205,11 @@ public class AlumnosView extends Div {
         }
 
         if(result){
-            notificacion.setText("Se ha guardado correctamente el alumno");
-            notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            notificacion.open();
+            notificacionOK.setText("Se ha guardado correctamente el alumno");
+            notificacionOK.open();
         } else {
-            notificacion.setText("Error al guardar el curso");
-            notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            notificacion.open();
+            notificacionKO.setText("Error al guardar el curso");
+            notificacionKO.open();
         }
         obtenerTodosAlumnos();
         cerrarFormulario();
@@ -241,13 +245,11 @@ public class AlumnosView extends Div {
 
         eliminarBtn.addClickListener(click -> {
             if(alumnosService.eliminarAlumno(alumno.getIdAlumno())){
-                notificacion.setText("Se ha eliminado correctamente el alumno");
-                notificacion.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                notificacion.open();
+                notificacionOK.setText("Se ha eliminado correctamente el alumno");
+                notificacionOK.open();
             } else {
-                notificacion.setText("Error al eliminar el alumno");
-                notificacion.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                notificacion.open();
+                notificacionKO.setText("Error al eliminar el alumno");
+                notificacionKO.open();
             }
 
             confirmacionDg.close();

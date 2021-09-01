@@ -22,7 +22,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private static final String LOGIN_PROCESSING_URL = "/login";
     private static final String LOGIN_FAILURE_URL = "/login?error";
     private static final String LOGIN_URL = "/login";
-    private static final String REGISTER_URL = "/registrar";
     private static final String LOGOUT_SUCCESS_URL = "/login";
 
     //definición roles y usuarios
@@ -37,7 +36,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-
         http.csrf().disable()
                 .requestCache().requestCache(new CustomRequestCache())
                 .and().authorizeRequests()
@@ -47,7 +45,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
                 .and().formLogin()
                 .loginPage(LOGIN_URL).permitAll()
-                .loginPage(REGISTER_URL).permitAll()
                 .loginProcessingUrl(LOGIN_PROCESSING_URL)
                 .failureUrl(LOGIN_FAILURE_URL)
                 .and().logout().logoutSuccessUrl(LOGOUT_SUCCESS_URL);
@@ -55,6 +52,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
+
         web.ignoring().antMatchers(
                 "/VAADIN/**",
                 "/favicon.ico",
