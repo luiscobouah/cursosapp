@@ -1,6 +1,8 @@
 package com.uah.es.views.alumnos;
 
+import com.helger.commons.csv.CSVWriter;
 import com.uah.es.model.Alumno;
+import com.uah.es.model.Curso;
 import com.uah.es.service.IAlumnosService;
 import com.uah.es.views.MainLayout;
 import com.vaadin.flow.component.Component;
@@ -9,6 +11,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
@@ -22,8 +26,18 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
+import org.apache.commons.io.IOUtils;
 import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /*https://vaadin.com/directory/component/grid-pagination/samples*/
 //https://vaadin.com/components/vaadin-button/java-install
@@ -38,6 +52,7 @@ public class AlumnosView extends Div {
 
     //Componentes visuales
     AlumnoForm alumnoForm;
+    Anchor linkDescargaCsv;
     PaginatedGrid<Alumno> grid = new PaginatedGrid<>();
     TextField correoFiltro = new TextField();
     Button buscarBtn = new Button("Buscar");
@@ -46,6 +61,10 @@ public class AlumnosView extends Div {
     Dialog formularioDg = new Dialog();
     Notification notificacionOK = new Notification("", 3000);
     Notification notificacionKO = new Notification("", 3000);
+
+
+    List<Alumno> listaAlumnos = new ArrayList<Alumno>();
+    boolean mostrarAcciones = true;
 
     public AlumnosView(IAlumnosService alumnosService) {
 
@@ -56,8 +75,8 @@ public class AlumnosView extends Div {
 
         addClassName("usuarios-view");
         configurarFormulario();
-        //HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
-        add(configurarBuscador(),configurarGrid());
+        setMinWidth("700px");
+        add(configurarBuscador(),configurarGrid(),configurarExportarExcel());
     }
 
     /**
@@ -80,7 +99,9 @@ public class AlumnosView extends Div {
             cursosBtn.addClickListener(e -> verListadoCursos(item));
             return cursosBtn;
         })
-        .setHeader("Cursos");
+        .setKey("cursos")
+        .setHeader("Cursos")
+        .setVisible(mostrarAcciones);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -91,7 +112,8 @@ public class AlumnosView extends Div {
         })
         .setKey("editar")
         .setHeader("Editar")
-        .setTextAlign(ColumnTextAlign.CENTER);
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setVisible(mostrarAcciones);;
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.TRASH);
             editarIcon.setColor("red");
@@ -102,7 +124,8 @@ public class AlumnosView extends Div {
         })
         .setKey("eliminar")
         .setHeader("Eliminar")
-        .setTextAlign(ColumnTextAlign.CENTER);
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setVisible(mostrarAcciones);
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
@@ -154,6 +177,19 @@ public class AlumnosView extends Div {
     }
 
     /**
+     * Configuracion del link para la descarga del Csv
+     *
+     */
+    private Component configurarExportarExcel() {
+
+        HorizontalLayout layoutLink = new HorizontalLayout();
+        linkDescargaCsv = new Anchor(new StreamResource("Alumnos.csv", this::generarCsv), "Descargar");
+        layoutLink.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        layoutLink.add(linkDescargaCsv);
+        return layoutLink;
+    }
+
+    /**
      * Configuracion del formulario para el alta de un nuevo alumno.
      *
      */
@@ -163,10 +199,6 @@ public class AlumnosView extends Div {
         alumnoForm.addListener(AlumnoForm.GuardarEvent.class, this::guardarAlumno);
         alumnoForm.addListener(AlumnoForm.CerrarEvent.class, e -> cerrarFormulario());
         formularioDg.add(alumnoForm);
-
-        /*nuevoAlumnoBtn.addClickListener(event -> {
-            formularioDg.open();
-        });*/
     }
 
     /**
@@ -174,10 +206,8 @@ public class AlumnosView extends Div {
      *
      */
     private void filtrar() {
-        Alumno alumno = alumnosService.buscarAlumnoPorCorreo(correoFiltro.getValue());
-        if (alumno!=null){
-            grid.setItems(alumno);
-        }
+        listaAlumnos = Collections.singletonList(alumnosService.buscarAlumnoPorCorreo(correoFiltro.getValue()));
+        grid.setItems(listaAlumnos);
     }
 
     /**
@@ -185,7 +215,7 @@ public class AlumnosView extends Div {
      *
      */
     private void obtenerTodosAlumnos() {
-        Alumno[] listaAlumnos = alumnosService.buscarTodos();
+        listaAlumnos = Arrays.asList(alumnosService.buscarTodos());
         grid.setItems(listaAlumnos);
     }
 
@@ -293,6 +323,26 @@ public class AlumnosView extends Div {
     }
 
     /**
+     * Función para generar el Csv con los datos del curso
+     *
+     */
+    private InputStream generarCsv() {
+        try {
+
+            StringWriter stringWriter = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(stringWriter);
+            csvWriter.writeNext("id", "Nombre", "Correo","Cursos");
+            listaAlumnos.forEach(a -> csvWriter.writeNext("" + a.getIdAlumno(), a.getNombre(),a.getCorreo(),a.getStringCursos())
+            );
+            return IOUtils.toInputStream(stringWriter.toString(), "UTF-8");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
      * Función para cerrar el formulario de alumno.
      *
      */
@@ -300,6 +350,20 @@ public class AlumnosView extends Div {
         Alumno alumno = new Alumno();
         alumnoForm.setAlumno(alumno);
         formularioDg.close();
+    }
+
+    /**
+     * Función ocultas las acciones cuando se llama desde CursosView.
+     *
+     */
+    public void ocultarAcciones() {
+        grid.getColumnByKey("cursos").setVisible(false);
+        grid.getColumnByKey("editar").setVisible(false);
+        grid.getColumnByKey("eliminar").setVisible(false);
+        linkDescargaCsv.setVisible(false);
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        grid.getSelectedItems();
+
     }
 
 }

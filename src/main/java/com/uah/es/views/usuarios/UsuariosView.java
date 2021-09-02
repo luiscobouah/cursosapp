@@ -1,6 +1,8 @@
 package com.uah.es.views.usuarios;
 
 
+import com.helger.commons.csv.CSVWriter;
+import com.uah.es.model.Alumno;
 import com.uah.es.model.Usuario;
 import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.MainLayout;
@@ -10,6 +12,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
@@ -23,10 +26,15 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
+import org.apache.commons.io.IOUtils;
 import org.springframework.security.access.annotation.Secured;
 import org.vaadin.klaudeta.PaginatedGrid;
 
-import java.util.Objects;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.*;
 
 @PageTitle("Usuarios")
 @Route(value = "usuarios", layout = MainLayout.class)
@@ -48,6 +56,8 @@ public class UsuariosView extends Div {
     Notification notificacionOK = new Notification("", 3000);
     Notification notificacionKO = new Notification("", 3000);
 
+    List<Usuario> listaUsuarios = new ArrayList<Usuario>();
+
     public UsuariosView(IUsuariosService usuariosService) {
 
         this.usuariosService = usuariosService;
@@ -58,7 +68,7 @@ public class UsuariosView extends Div {
         addClassName("cursos-view");
         HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
         superiorLayout.setPadding(true);
-        add(superiorLayout,configurarGrid());
+        add(superiorLayout,configurarGrid(),configurarExportarExcel());
     }
 
     /**
@@ -177,6 +187,19 @@ public class UsuariosView extends Div {
     }
 
     /**
+     * Configuracion del link para la descarga del Csv
+     *
+     */
+    private Component configurarExportarExcel() {
+
+        HorizontalLayout layoutLink = new HorizontalLayout();
+        Anchor linkDescargaCsv = new Anchor(new StreamResource("Usuarios.csv", this::generarCsv), "Descargar");
+        layoutLink.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        layoutLink.add(linkDescargaCsv);
+        return layoutLink;
+    }
+
+    /**
      * Configuracion del formulario para el alta de un nuevo alumno.
      *
      */
@@ -205,21 +228,17 @@ public class UsuariosView extends Div {
      *
      */
     private void filtrar() {
-        Usuario usuario = new Usuario();
-
         String nombre = nombreFiltro.getValue();
         String profesor = correoFiltro.getValue();
 
         if(!Objects.equals(nombre, "")){
-            usuario =  usuariosService.buscarUsuarioPorNombre(nombre);
+            listaUsuarios = Collections.singletonList(usuariosService.buscarUsuarioPorNombre(nombre));
         }
         if(!Objects.equals(profesor, "")){
-            usuario =  usuariosService.buscarUsuarioPorCorreo(profesor);
+            listaUsuarios = Collections.singletonList(usuariosService.buscarUsuarioPorCorreo(profesor));
         }
+        grid.setItems(listaUsuarios);
 
-        if (usuario!=null){
-            grid.setItems(usuario);
-        }
     }
 
     /**
@@ -227,7 +246,7 @@ public class UsuariosView extends Div {
      *
      */
     private void obtenerTodosUsuarios() {
-        Usuario[] listaUsuarios = usuariosService.buscarTodos();
+        listaUsuarios = Arrays.asList(usuariosService.buscarTodos());
         grid.setItems(listaUsuarios);
     }
 
@@ -247,10 +266,10 @@ public class UsuariosView extends Div {
         }
 
         if(resultado){
-            notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            notificacionOK.setText("Se ha guardado correctamente el usuario");
             notificacionOK.open();
         } else {
-            notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notificacionKO.setText("Error al guardar el curso");
             notificacionKO.open();
         }
         obtenerTodosUsuarios();
@@ -307,6 +326,26 @@ public class UsuariosView extends Div {
         btnsLayout.add(cancelarBtn,eliminarBtn);
         confirmacionDg.add(msjConfirmacion,btnsLayout);
         confirmacionDg.open();
+    }
+
+    /**
+     * Función para generar el Csv con los datos del curso
+     *
+     */
+    private InputStream generarCsv() {
+        try {
+
+            StringWriter stringWriter = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(stringWriter);
+            csvWriter.writeNext("id", "Nombre", "Correo","Clave","Roles");
+            listaUsuarios.forEach(u -> csvWriter.writeNext("" + u.getIdUsuario(), u.getNombre(),u.getCorreo(),u.getClave(),u.getStringRoles())
+            );
+            return IOUtils.toInputStream(stringWriter.toString(), "UTF-8");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**

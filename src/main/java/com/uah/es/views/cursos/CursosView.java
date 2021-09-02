@@ -2,6 +2,7 @@ package com.uah.es.views.cursos;
 
 //https://vaadin.com/components/vaadin-ordered-layout/java-examples
 
+import com.helger.commons.csv.CSVWriter;
 import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
 import com.uah.es.model.Matricula;
@@ -11,14 +12,14 @@ import com.uah.es.service.ICursosService;
 import com.uah.es.service.IMatriculasService;
 import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.MainLayout;
+import com.uah.es.views.alumnos.AlumnosView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -32,11 +33,14 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.server.StreamResource;
+import org.apache.commons.io.IOUtils;
 import org.vaadin.klaudeta.PaginatedGrid;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.*;
 
 import static com.uah.es.security.SecurityUtils.getEmailUser;
 import static com.uah.es.security.SecurityUtils.userHasRole;
@@ -54,6 +58,7 @@ public class CursosView extends Div {
 
     //Componentes visuales
     CursoForm cursoForm;
+    AlumnosView alumnosView;
     PaginatedGrid<Curso> grid = new PaginatedGrid<>();
     TextField nombreFiltro = new TextField();
     TextField profesorFiltro = new TextField();
@@ -66,8 +71,10 @@ public class CursosView extends Div {
     Notification notificacionOK = new Notification("", 3000);
     Notification notificacionKO = new Notification("", 3000);
 
-    List<Curso> listaMisCursos;
-    Alumno alumno;
+    List<Curso> listaMisCursos = new ArrayList<Curso>();
+    List<Curso> listaCursos = new ArrayList<Curso>();
+    Alumno alumno = new Alumno();
+    boolean isListadoMisCursos = false;
 
     public CursosView(
             ICursosService cursosService,
@@ -83,13 +90,15 @@ public class CursosView extends Div {
         notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        alumno = alumnosService.buscarAlumnoPorCorreo(getEmailUser());
-        listaMisCursos = alumno.getCursos();
+        if(userHasRole(Collections.singletonList("Alumno"))){
+            alumno = alumnosService.buscarAlumnoPorCorreo(getEmailUser());
+            listaMisCursos = alumno.getCursos();
+        }
 
         addClassName("cursos-view");
         HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
         superiorLayout.setPadding(true);
-        add(superiorLayout,configurarGrid());
+        add(superiorLayout,configurarGrid(),configurarExportarExcel());
     }
 
     /**
@@ -99,13 +108,12 @@ public class CursosView extends Div {
     private Component configurarGrid() {
 
         VerticalLayout layoutGrid = new VerticalLayout();
-
         // Se añaden las columnas al grid
         grid.addColumn(Curso::getIdCurso).setHeader("ID").setKey("id").setSortable(true).setAutoWidth(true);
         grid.addColumn(Curso::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
-        grid.addColumn(Curso::getDuracion).setHeader("Duración").setKey("duracion").setSortable(true);
+        grid.addColumn(Curso::getDuracion).setHeader("Duración (H)").setKey("duracion").setSortable(true).setAutoWidth(true);
         grid.addColumn(Curso::getProfesor).setHeader("Profesor").setKey("profesor").setSortable(true).setAutoWidth(true);
-        grid.addColumn(Curso::getPrecio).setHeader("Precio").setKey("precio").setSortable(true).setAutoWidth(true);;
+        grid.addColumn(Curso::getPrecio).setHeader("Precio (€)").setKey("precio").setSortable(true).setAutoWidth(true);;
         grid.addColumn(Curso::getCategoria).setHeader("Categoría").setKey("categoria").setSortable(true).setAutoWidth(true);;
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
@@ -151,12 +159,26 @@ public class CursosView extends Div {
         .setTextAlign(ColumnTextAlign.CENTER)
         .setAutoWidth(true)
         .setVisible(userHasRole(Collections.singletonList("Alumno")));
+        grid.addComponentColumn(item -> {
+                    Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
+                    editarIcon.setColor("blue");
+                    editarIcon.getStyle().set("cursor", "pointer");
+                    editarIcon.setSize("18px");
+                    editarIcon.addClickListener(e -> matricularCursoAdmin(item));
+                    return editarIcon;
+                })
+                .setKey("matricularAlumno")
+                .setHeader("Matricular Alumno")
+                .setTextAlign(ColumnTextAlign.CENTER)
+                .setAutoWidth(true)
+                .setVisible(userHasRole(Collections.singletonList("Admin")));
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
         //grid.setHeightByRows(true);
         grid.setColumnReorderingAllowed(true);
         //grid.setSelectionMode(Grid.SelectionMode.MULTI);
+
         obtenerTodosCursos();
         layoutGrid.add(grid);
 
@@ -212,6 +234,7 @@ public class CursosView extends Div {
         mostrarTodosBtn.getStyle().set("cursor", "pointer");
         mostrarTodosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarTodosBtn.addClickListener(e -> {
+            //Cambiar titulo grid
             //Limpiar los buscadores
             nombreFiltro.clear();
             profesorFiltro.clear();
@@ -220,10 +243,6 @@ public class CursosView extends Div {
             nombreFiltro.setEnabled(true);
             profesorFiltro.setEnabled(true);
             categoriaFiltro.setEnabled(true);
-            // Mostrar la columna Matricular
-            if(userHasRole(Collections.singletonList("Alumno"))){
-                grid.getColumnByKey("matricular").setVisible(true);
-            }
             obtenerTodosCursos();
         });
 
@@ -239,9 +258,6 @@ public class CursosView extends Div {
             nombreFiltro.setEnabled(false);
             profesorFiltro.setEnabled(false);
             categoriaFiltro.setEnabled(false);
-            // Mostrar la columna Matricula
-            grid.getColumnByKey("matricular").setVisible(false);
-
             obtenerMisCursos();
         });
 
@@ -251,6 +267,19 @@ public class CursosView extends Div {
 
         buscadorLayout.add(nombreFiltro,profesorFiltro,categoriaFiltro,layoutBtns);
         return buscadorLayout;
+    }
+
+    /**
+     * Configuracion del link para la descarga del Csv
+     *
+     */
+    private Component configurarExportarExcel() {
+
+        HorizontalLayout layoutLink = new HorizontalLayout();
+        Anchor linkDescargaCsv = new Anchor(new StreamResource("Cursos.csv", this::generarCsv), "Descargar");
+        layoutLink.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        layoutLink.add(linkDescargaCsv);
+        return layoutLink;
     }
 
     /**
@@ -283,23 +312,22 @@ public class CursosView extends Div {
      *
      */
     private void filtrar() {
-        Curso[] cursos = new Curso[0];
 
         String nombre = nombreFiltro.getValue();
         String profesor = profesorFiltro.getValue();
         String categoria = categoriaFiltro.getValue();
 
         if(!Objects.equals(nombre, "")){
-            cursos =  cursosService.buscarCursosPorNombre(nombre);
+            listaCursos = Arrays.asList(cursosService.buscarCursosPorNombre(nombre));
         }
         if(!Objects.equals(profesor, "")){
-            cursos =  cursosService.buscarCursosPorProfesor(profesor);
+            listaCursos = Arrays.asList(cursosService.buscarCursosPorProfesor(profesor));
         }
         if(!Objects.equals(categoria, "") && categoria!=null){
-            cursos =  cursosService.buscarCursosPorCategoria(categoria);
+            listaCursos = Arrays.asList(cursosService.buscarCursosPorCategoria(categoria));
         }
-        if (cursos!=null){
-            grid.setItems(cursos);
+        if (listaCursos!=null){
+            grid.setItems(listaCursos);
         }
     }
 
@@ -308,7 +336,8 @@ public class CursosView extends Div {
      *
      */
     private void obtenerTodosCursos() {
-        Curso[] listaCursos = cursosService.buscarTodos();
+        isListadoMisCursos = false;
+        listaCursos = Arrays.asList(cursosService.buscarTodos());
         grid.setItems(listaCursos);
     }
 
@@ -317,7 +346,8 @@ public class CursosView extends Div {
      *
      */
     private void obtenerMisCursos() {
-        listaMisCursos = alumno.getCursos();
+        isListadoMisCursos = true;
+        listaMisCursos = alumnosService.buscarAlumnoPorCorreo(getEmailUser()).getCursos();
         grid.setItems(listaMisCursos);
     }
 
@@ -384,7 +414,6 @@ public class CursosView extends Div {
                 notificacionKO.setText("Error al eliminar el curso");
                 notificacionKO.open();
             }
-
             confirmacionDg.close();
             obtenerTodosCursos();
 
@@ -415,6 +444,47 @@ public class CursosView extends Div {
         } else {
             notificacionKO.setText("Error al matricularse en el curso");
             notificacionKO.open();
+        }
+        listaMisCursos = alumnosService.buscarAlumnoPorCorreo(getEmailUser()).getCursos();
+        obtenerTodosCursos();
+    }
+
+    /**
+     * Función para matricular el alumno en el curso.
+     *
+     */
+    private void matricularCursoAdmin(Curso curso) {
+
+        Dialog dg = new Dialog();
+        alumnosView = new AlumnosView(alumnosService);
+        alumnosView.ocultarAcciones();
+        dg.add(alumnosView);
+        dg.open();
+    }
+
+    /**
+     * Función para generar el Csv con los datos del curso
+     *
+     */
+    private InputStream generarCsv() {
+        try {
+
+            List<Curso> cursosCsv = new ArrayList<Curso>();
+            if(isListadoMisCursos){
+                cursosCsv = listaMisCursos;
+            } else {
+                cursosCsv = listaCursos;
+            }
+            StringWriter stringWriter = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(stringWriter);
+            csvWriter.writeNext("id", "Nombre", "Duración (H)", "Profesor", "Precio (€)", "Categoría");
+            cursosCsv.forEach(c -> csvWriter.writeNext("" + c.getIdCurso(), c.getNombre(),c.getDuracion().toString(),c.getProfesor(),c.getPrecio().toString(),c.getCategoria())
+            );
+            return IOUtils.toInputStream(stringWriter.toString(), "UTF-8");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
