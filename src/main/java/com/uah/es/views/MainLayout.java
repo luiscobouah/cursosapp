@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uah.es.security.SecurityUtils;
+import com.uah.es.views.matriculas.MatriculasView;
 import com.uah.es.views.usuarios.UsuariosView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
@@ -122,10 +123,11 @@ public class MainLayout extends AppLayout {
     }
 
     private List<Tab> createMenuItems() {
-        MenuItemInfo[] menuItems = new MenuItemInfo[]{ //
+        MenuItemInfo[] menuItems = new MenuItemInfo[]{
                 new MenuItemInfo("Cursos", "la la-book-open", CursosView.class),
                 new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class), //
                 new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class), //
+                new MenuItemInfo("Matriculas", "la la-users", MatriculasView.class), //
         };
 
         List<Tab> tabs = new ArrayList<>();

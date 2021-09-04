@@ -19,6 +19,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -59,6 +60,7 @@ public class CursosView extends Div {
     //Componentes visuales
     CursoForm cursoForm;
     AlumnosView alumnosView;
+    Anchor linkDescargaCsv;
     PaginatedGrid<Curso> grid = new PaginatedGrid<>();
     TextField nombreFiltro = new TextField();
     TextField profesorFiltro = new TextField();
@@ -75,6 +77,7 @@ public class CursosView extends Div {
     List<Curso> listaCursos = new ArrayList<Curso>();
     Alumno alumno = new Alumno();
     boolean isListadoMisCursos = false;
+    public  Curso cursoSeleccionado = new Curso();
 
     public CursosView(
             ICursosService cursosService,
@@ -113,8 +116,8 @@ public class CursosView extends Div {
         grid.addColumn(Curso::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Curso::getDuracion).setHeader("Duración (H)").setKey("duracion").setSortable(true).setAutoWidth(true);
         grid.addColumn(Curso::getProfesor).setHeader("Profesor").setKey("profesor").setSortable(true).setAutoWidth(true);
-        grid.addColumn(Curso::getPrecio).setHeader("Precio (€)").setKey("precio").setSortable(true).setAutoWidth(true);;
-        grid.addColumn(Curso::getCategoria).setHeader("Categoría").setKey("categoria").setSortable(true).setAutoWidth(true);;
+        grid.addColumn(Curso::getPrecio).setHeader("Precio (€)").setKey("precio").setSortable(true).setAutoWidth(true);
+        grid.addColumn(Curso::getCategoria).setHeader("Categoría").setKey("categoria").setSortable(true).setAutoWidth(true);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -159,7 +162,7 @@ public class CursosView extends Div {
         .setTextAlign(ColumnTextAlign.CENTER)
         .setAutoWidth(true)
         .setVisible(userHasRole(Collections.singletonList("Alumno")));
-        grid.addComponentColumn(item -> {
+        /* grid.addComponentColumn(item -> {
                     Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
                     editarIcon.setColor("blue");
                     editarIcon.getStyle().set("cursor", "pointer");
@@ -171,7 +174,7 @@ public class CursosView extends Div {
                 .setHeader("Matricular Alumno")
                 .setTextAlign(ColumnTextAlign.CENTER)
                 .setAutoWidth(true)
-                .setVisible(userHasRole(Collections.singletonList("Admin")));
+                .setVisible(userHasRole(Collections.singletonList("Admin")));*/
 
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
@@ -276,7 +279,7 @@ public class CursosView extends Div {
     private Component configurarExportarExcel() {
 
         HorizontalLayout layoutLink = new HorizontalLayout();
-        Anchor linkDescargaCsv = new Anchor(new StreamResource("Cursos.csv", this::generarCsv), "Descargar");
+        linkDescargaCsv = new Anchor(new StreamResource("Cursos.csv", this::generarCsv), "Descargar");
         layoutLink.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         layoutLink.add(linkDescargaCsv);
         return layoutLink;
@@ -457,7 +460,7 @@ public class CursosView extends Div {
 
         Dialog dg = new Dialog();
         alumnosView = new AlumnosView(alumnosService);
-        alumnosView.ocultarAcciones();
+       // alumnosView.ocultarAcciones();
         dg.add(alumnosView);
         dg.open();
     }
@@ -493,9 +496,40 @@ public class CursosView extends Div {
      *
      */
     private void cerrarFormulario() {
+
         Curso curso = new Curso();
         cursoForm.setCurso(curso);
         formularioDg.close();
+    }
+
+    /**
+     * Función ocultas las acciones cuando se llama desde MatriculasView.
+     *
+     */
+    public void ocultarAcciones() {
+
+        grid.getColumnByKey("duracion").setVisible(false);
+        grid.getColumnByKey("profesor").setVisible(false);
+        grid.getColumnByKey("precio").setVisible(false);
+        grid.getColumnByKey("categoria").setVisible(false);
+        grid.getColumnByKey("matricular").setVisible(false);
+        grid.getColumnByKey("editar").setVisible(false);
+        grid.getColumnByKey("eliminar").setVisible(false);
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        grid.getSelectedItems();
+        grid.setPageSize(5);
+        linkDescargaCsv.setVisible(false);
+        nuevoCursoBtn.setVisible(false);
+        profesorFiltro.setVisible(false);
+        categoriaFiltro.setVisible(false);
+
+        grid.addSelectionListener(e ->{
+            if(e.getFirstSelectedItem().isPresent()){
+                cursoSeleccionado = e.getFirstSelectedItem().get();
+            } else {
+                cursoSeleccionado = new Curso();
+            }
+        });
     }
 
 }

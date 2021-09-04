@@ -62,9 +62,9 @@ public class AlumnosView extends Div {
     Notification notificacionOK = new Notification("", 3000);
     Notification notificacionKO = new Notification("", 3000);
 
-
     List<Alumno> listaAlumnos = new ArrayList<Alumno>();
     boolean mostrarAcciones = true;
+    public  Alumno alumnoSeleccionado = new Alumno();
 
     public AlumnosView(IAlumnosService alumnosService) {
 
@@ -75,7 +75,6 @@ public class AlumnosView extends Div {
 
         addClassName("usuarios-view");
         configurarFormulario();
-        setMinWidth("700px");
         add(configurarBuscador(),configurarGrid(),configurarExportarExcel());
     }
 
@@ -353,16 +352,37 @@ public class AlumnosView extends Div {
     }
 
     /**
-     * Función ocultas las acciones cuando se llama desde CursosView.
+     * Función para actualizar el grid con todos los alumnos que se han dado de alta.
      *
      */
-    public void ocultarAcciones() {
+    private void obtenerAlumnoNoMatriculados(Curso curso) {
+        ArrayList<Alumno> alumnos = new ArrayList(listaAlumnos);
+        alumnos.removeAll(curso.getAlumnos());
+        grid.setItems(alumnos);
+    }
+
+    /**
+     * Función para ocular las acciones cuando se llama desde MatriculasView.
+     *
+     */
+    public void ocultarAcciones(Curso curso) {
+        obtenerAlumnoNoMatriculados(curso);
         grid.getColumnByKey("cursos").setVisible(false);
         grid.getColumnByKey("editar").setVisible(false);
         grid.getColumnByKey("eliminar").setVisible(false);
-        linkDescargaCsv.setVisible(false);
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.getSelectedItems();
+        linkDescargaCsv.setVisible(false);
+        grid.setPageSize(5);
+
+        grid.addSelectionListener(e ->{
+            if(e.getFirstSelectedItem().isPresent()){
+                alumnoSeleccionado = e.getFirstSelectedItem().get();
+            } else {
+                alumnoSeleccionado = new Alumno();
+            }
+        });
+
 
     }
 

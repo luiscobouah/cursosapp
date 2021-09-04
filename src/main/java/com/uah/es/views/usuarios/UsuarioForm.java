@@ -10,11 +10,10 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.checkbox.CheckboxGroup;
-import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -35,7 +34,7 @@ public class UsuarioForm extends FormLayout {
     EmailField correo = new EmailField ("Correo");
     TextField clave = new TextField ("Clave");
     Checkbox estado = new Checkbox();
-    CheckboxGroup<Rol> roles = new CheckboxGroup<>();
+    RadioButtonGroup<Rol> roles = new RadioButtonGroup<>();
 
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
@@ -55,12 +54,14 @@ public class UsuarioForm extends FormLayout {
         rolesLista.add(new Rol(3,"Profesor"));
         roles.setLabel("Rol");
         roles.setItems(rolesLista);
-        roles.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        //roles.addThemeVariants(RadioButtonGroupV.LUMO_VERTICAL);
+        roles.isRequired();
         roles.addValueChangeListener(
                 e -> {
                     //usuario.setRoles(null);
-                    Set<Rol> rolesSeleccionados = e.getValue();
-                    List<Rol> roles = new ArrayList<Rol>(rolesSeleccionados);
+                    Rol rolesSeleccionados = e.getValue();
+                    List<Rol> roles = new ArrayList<Rol>();
+                    roles.add(rolesSeleccionados);
                     usuario.setRoles(roles);
                 }
         );
@@ -112,8 +113,7 @@ public class UsuarioForm extends FormLayout {
         List<Rol> rolesUsuario = usuario.getRoles();
 
         if (rolesUsuario != null){
-            Set<Rol> rolesLista = new HashSet<>(rolesUsuario);
-            roles.setValue(rolesLista);
+            roles.setValue(rolesUsuario.get(0));
         }
 
         this.usuario = usuario;
@@ -127,6 +127,14 @@ public class UsuarioForm extends FormLayout {
         } catch (ValidationException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Funcion para desactivar el RadioButtonGroup de roles cuando se modifica un usuario.
+     *
+     */
+    public  void desaactivarRoles() {
+        roles.setReadOnly(true);
     }
 
     /**

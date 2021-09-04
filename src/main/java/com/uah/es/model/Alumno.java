@@ -2,6 +2,7 @@ package com.uah.es.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Alumno {
 
@@ -14,7 +15,7 @@ public class Alumno {
         this.idAlumno = 0;
         this.nombre = nombre;
         this.correo = correo;
-        this.cursos = new ArrayList<>();
+        this.cursos = new ArrayList<Curso>();
     }
 
     public Alumno() {
@@ -67,5 +68,29 @@ public class Alumno {
         return this.nombre;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Alumno)) return false;
+        Alumno alumno = (Alumno) o;
+        return idAlumno.equals(alumno.idAlumno);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(idAlumno);
+    }
+
+    /*@Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Alumno)) return false;
+        Alumno alumno = (Alumno) o;
+        return Objects.equals(idAlumno, alumno.idAlumno);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(idAlumno);
+    }*/
 }

@@ -282,6 +282,7 @@ public class UsuariosView extends Div {
      */
     private void editarUsuario(Usuario usuario) {
         usuarioForm.setUsuario(usuario);
+        usuarioForm.desaactivarRoles();
         formularioDg.open();
     }
 
