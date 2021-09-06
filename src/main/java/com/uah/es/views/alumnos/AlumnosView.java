@@ -12,9 +12,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -34,10 +33,7 @@ import org.vaadin.klaudeta.PaginatedGrid;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /*https://vaadin.com/directory/component/grid-pagination/samples*/
 //https://vaadin.com/components/vaadin-button/java-install
@@ -54,6 +50,7 @@ public class AlumnosView extends Div {
     AlumnoForm alumnoForm;
     Anchor linkDescargaCsv;
     PaginatedGrid<Alumno> grid = new PaginatedGrid<>();
+    TextField nombreFiltro = new TextField();
     TextField correoFiltro = new TextField();
     Button buscarBtn = new Button("Buscar");
     Button mostrarTodosBtn = new Button("Mostrar todos");
@@ -89,17 +86,17 @@ public class AlumnosView extends Div {
         grid.addColumn(Alumno::getIdAlumno).setHeader("ID").setKey("id").setAutoWidth(true);
         grid.addColumn(Alumno::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Alumno::getCorreo).setHeader("Correo").setKey("correo").setSortable(true).setAutoWidth(true);
-        //grid.addColumn(Alumno::getStringCursos).setHeader("Cursos").setKey("curso").setAutoWidth(true);
         grid.addComponentColumn(item -> {
-            Button cursosBtn = new Button();
-            cursosBtn.setText(item.getStringCursos());
+            Icon cursosBtn = new Icon(VaadinIcon.EYE);
+            cursosBtn.setColor("#1B4F72");
             cursosBtn.getStyle().set("cursor", "pointer");
-            cursosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            cursosBtn.setSize("18px");
             cursosBtn.addClickListener(e -> verListadoCursos(item));
             return cursosBtn;
         })
         .setKey("cursos")
         .setHeader("Cursos")
+        .setTextAlign(ColumnTextAlign.CENTER)
         .setVisible(mostrarAcciones);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
@@ -112,7 +109,7 @@ public class AlumnosView extends Div {
         .setKey("editar")
         .setHeader("Editar")
         .setTextAlign(ColumnTextAlign.CENTER)
-        .setVisible(mostrarAcciones);;
+        .setVisible(mostrarAcciones);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.TRASH);
             editarIcon.setColor("red");
@@ -126,6 +123,8 @@ public class AlumnosView extends Div {
         .setTextAlign(ColumnTextAlign.CENTER)
         .setVisible(mostrarAcciones);
 
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.setColumnReorderingAllowed(true);
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
         obtenerTodosAlumnos();
@@ -142,15 +141,27 @@ public class AlumnosView extends Div {
 
         HorizontalLayout buscadorLayout = new HorizontalLayout();
 
+        // Configuracion del filtro para buscar por nombre
+        nombreFiltro.setLabel("Nombre");
+        nombreFiltro.setWidth("20%");
+        nombreFiltro.setClearButtonVisible(true);
+        nombreFiltro.setValueChangeMode(ValueChangeMode.EAGER);
+
         // Configuracion del filtro para buscar por correo
         correoFiltro.setLabel("Correo");
-        correoFiltro.setWidth("30%");
+        correoFiltro.setWidth("20%");
         correoFiltro.setClearButtonVisible(true);
         correoFiltro.setValueChangeMode(ValueChangeMode.EAGER);
 
+        // Se habilita el btn buscar solo cuando el nombre tenga valor
+        nombreFiltro.addValueChangeListener(e -> {
+            buscarBtn.setEnabled(!Objects.equals(nombreFiltro.getValue(), ""));
+            correoFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
+        });
         // Se habilita el btn buscar solo cuando el correo tenga valor
         correoFiltro.addValueChangeListener(e -> {
-            buscarBtn.setEnabled(!correoFiltro.getValue().isEmpty());
+            buscarBtn.setEnabled(!Objects.equals(correoFiltro.getValue(), ""));
+            nombreFiltro.setEnabled(Objects.equals(correoFiltro.getValue(), ""));
         });
 
         buscarBtn.setEnabled(false);
@@ -161,7 +172,12 @@ public class AlumnosView extends Div {
         mostrarTodosBtn.getStyle().set("cursor", "pointer");
         mostrarTodosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarTodosBtn.addClickListener(e -> {
+            //Limpiar los buscadores
+            nombreFiltro.clear();
             correoFiltro.clear();
+            // Habilitar los buscadores
+            nombreFiltro.setEnabled(true);
+            correoFiltro.setEnabled(true);
             obtenerTodosAlumnos();
         });
 
@@ -170,7 +186,7 @@ public class AlumnosView extends Div {
         layoutBtns.add(buscarBtn,mostrarTodosBtn);
 
         buscadorLayout.setPadding(true);
-        buscadorLayout.add(correoFiltro,layoutBtns);
+        buscadorLayout.add(nombreFiltro,correoFiltro,layoutBtns);
         return buscadorLayout;
 
     }
@@ -201,12 +217,24 @@ public class AlumnosView extends Div {
     }
 
     /**
-     * Función para buscar un alumno por el correo.
+     * Función para buscar un alumno por el nombre o correo.
      *
      */
     private void filtrar() {
-        listaAlumnos = Collections.singletonList(alumnosService.buscarAlumnoPorCorreo(correoFiltro.getValue()));
-        grid.setItems(listaAlumnos);
+
+        String nombre = nombreFiltro.getValue();
+        String correo = correoFiltro.getValue();
+
+        if(!Objects.equals(nombre, "")){
+            listaAlumnos = Arrays.asList(alumnosService.buscarAlumnosPorNombre(nombre));
+        }
+        if(!Objects.equals(correo, "")){
+            listaAlumnos = Collections.singletonList(alumnosService.buscarAlumnoPorCorreo(correo));
+        }
+        if (listaAlumnos!=null){
+            grid.setItems(listaAlumnos);
+        }
+
     }
 
     /**
@@ -304,9 +332,12 @@ public class AlumnosView extends Div {
 
         // Se configura el Dialog para visualizar el listado de cursos de un alumno
         Dialog listadoCursosDg = new Dialog();
-        Label listadoCursos = new Label();
-        listadoCursos.setText( alumno.getStringCursos());
-
+        H2 titulo = new H2("Cursos de: " + alumno.getNombre());
+        Grid<Curso> gridCursos= new Grid<>();
+        gridCursos.addColumn(Curso::getIdCurso).setHeader("ID").setKey("id").setAutoWidth(true);
+        gridCursos.addColumn(Curso::getNombre).setHeader("Nombre").setKey("nombre").setAutoWidth(true);
+        gridCursos.addColumn(Curso::getProfesor).setHeader("Profesor").setKey("profesor").setAutoWidth(true);
+        gridCursos.setItems(alumno.getCursos());
         HorizontalLayout btns = new HorizontalLayout();
         Button cerrarBtn = new Button("Cerrar");
         cerrarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -316,8 +347,11 @@ public class AlumnosView extends Div {
             listadoCursosDg.close();
         });
 
+        btns.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btns.getElement().getStyle().set("margin-left", "auto");
         btns.add(cerrarBtn);
-        listadoCursosDg.add(listadoCursos,btns);
+        listadoCursosDg.add(titulo,gridCursos,btns);
+        listadoCursosDg.setWidth("600px");
         listadoCursosDg.open();
     }
 
@@ -357,8 +391,10 @@ public class AlumnosView extends Div {
      */
     private void obtenerAlumnoNoMatriculados(Curso curso) {
         ArrayList<Alumno> alumnos = new ArrayList(listaAlumnos);
-        alumnos.removeAll(curso.getAlumnos());
-        grid.setItems(alumnos);
+        if(curso.getAlumnos()!=null){
+            alumnos.removeAll(curso.getAlumnos());
+            grid.setItems(alumnos);
+        }
     }
 
     /**
@@ -370,7 +406,9 @@ public class AlumnosView extends Div {
         grid.getColumnByKey("cursos").setVisible(false);
         grid.getColumnByKey("editar").setVisible(false);
         grid.getColumnByKey("eliminar").setVisible(false);
+        grid.setColumnReorderingAllowed(false);
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        correoFiltro.setVisible(false);
         grid.getSelectedItems();
         linkDescargaCsv.setVisible(false);
         grid.setPageSize(5);

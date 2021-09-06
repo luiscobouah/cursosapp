@@ -1,10 +1,8 @@
 package com.uah.es.views;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import com.uah.es.security.SecurityUtils;
+import com.uah.es.views.alumnos.AlumnosView;
+import com.uah.es.views.cursos.CursosView;
 import com.uah.es.views.matriculas.MatriculasView;
 import com.uah.es.views.usuarios.UsuariosView;
 import com.vaadin.flow.component.Component;
@@ -12,25 +10,28 @@ import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
-import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.PageTitle;
-import com.uah.es.views.MainLayout;
-import com.uah.es.views.cursos.CursosView;
-import com.uah.es.views.alumnos.AlumnosView;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.component.avatar.Avatar;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * The main view is a top-level placeholder for other views.
+ */
 /**
  * The main view is a top-level placeholder for other views.
  */
@@ -105,7 +106,7 @@ public class MainLayout extends AppLayout {
         HorizontalLayout logoLayout = new HorizontalLayout();
         logoLayout.setId("logo");
         logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        logoLayout.add(new Image("images/logo.png", "CursosApp logo"));
+         logoLayout.add(new Image("icons/icon.png", "CursosApp logo"));
         logoLayout.add(new H1("CursosApp"));
         layout.add(logoLayout, menu);
         return layout;
@@ -127,17 +128,15 @@ public class MainLayout extends AppLayout {
                 new MenuItemInfo("Cursos", "la la-book-open", CursosView.class),
                 new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class), //
                 new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class), //
-                new MenuItemInfo("Matriculas", "la la-users", MatriculasView.class), //
+                new MenuItemInfo("Matriculas", "la la-book", MatriculasView.class), //
         };
 
         List<Tab> tabs = new ArrayList<>();
         for (MenuItemInfo menuItemInfo : menuItems) {
-
             //Verificamos si el usuario tiene el rol que permita visualizar la vista
             if (SecurityUtils.isAccessGranted(menuItemInfo.getView())){
                 tabs.add(createTab(menuItemInfo));
             }
-
         }
         return tabs;
     }

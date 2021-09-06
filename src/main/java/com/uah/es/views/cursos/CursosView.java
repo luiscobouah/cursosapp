@@ -3,10 +3,7 @@ package com.uah.es.views.cursos;
 //https://vaadin.com/components/vaadin-ordered-layout/java-examples
 
 import com.helger.commons.csv.CSVWriter;
-import com.uah.es.model.Alumno;
-import com.uah.es.model.Curso;
-import com.uah.es.model.Matricula;
-import com.uah.es.model.Usuario;
+import com.uah.es.model.*;
 import com.uah.es.service.IAlumnosService;
 import com.uah.es.service.ICursosService;
 import com.uah.es.service.IMatriculasService;
@@ -17,9 +14,11 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.charts.model.style.Color;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -93,7 +92,7 @@ public class CursosView extends Div {
         notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        if(userHasRole(Collections.singletonList("Alumno"))){
+        if(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO))){
             alumno = alumnosService.buscarAlumnoPorCorreo(getEmailUser());
             listaMisCursos = alumno.getCursos();
         }
@@ -119,6 +118,18 @@ public class CursosView extends Div {
         grid.addColumn(Curso::getPrecio).setHeader("Precio (€)").setKey("precio").setSortable(true).setAutoWidth(true);
         grid.addColumn(Curso::getCategoria).setHeader("Categoría").setKey("categoria").setSortable(true).setAutoWidth(true);
         grid.addComponentColumn(item -> {
+            Icon alumnosBtn = new Icon(VaadinIcon.EYE);
+            alumnosBtn.setColor("#1B4F72");
+            alumnosBtn.getStyle().set("cursor", "pointer");
+            alumnosBtn.setSize("18px");
+            alumnosBtn.addClickListener(e -> verListadoAlumnos(item));
+            return alumnosBtn;
+        })
+        .setKey("alumnos")
+        .setHeader("Alumnos")
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ADMIN)));
+        grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
             editarIcon.getStyle().set("cursor", "pointer");
@@ -130,7 +141,7 @@ public class CursosView extends Div {
         .setHeader("Editar")
         .setTextAlign(ColumnTextAlign.CENTER)
         .setAutoWidth(true)
-        .setVisible(userHasRole(Collections.singletonList("Admin")));
+        .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ADMIN)));
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.TRASH);
             editarIcon.setColor("red");
@@ -143,7 +154,7 @@ public class CursosView extends Div {
         .setHeader("Eliminar")
         .setTextAlign(ColumnTextAlign.CENTER)
         .setAutoWidth(true)
-        .setVisible(userHasRole(Collections.singletonList("Admin")));
+        .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ADMIN)));
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
             if (listaMisCursos.contains(item)){
@@ -161,27 +172,12 @@ public class CursosView extends Div {
         .setHeader("Matricular")
         .setTextAlign(ColumnTextAlign.CENTER)
         .setAutoWidth(true)
-        .setVisible(userHasRole(Collections.singletonList("Alumno")));
-        /* grid.addComponentColumn(item -> {
-                    Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
-                    editarIcon.setColor("blue");
-                    editarIcon.getStyle().set("cursor", "pointer");
-                    editarIcon.setSize("18px");
-                    editarIcon.addClickListener(e -> matricularCursoAdmin(item));
-                    return editarIcon;
-                })
-                .setKey("matricularAlumno")
-                .setHeader("Matricular Alumno")
-                .setTextAlign(ColumnTextAlign.CENTER)
-                .setAutoWidth(true)
-                .setVisible(userHasRole(Collections.singletonList("Admin")));*/
+        .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO)));
 
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.setColumnReorderingAllowed(true);
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
-        //grid.setHeightByRows(true);
-        grid.setColumnReorderingAllowed(true);
-        //grid.setSelectionMode(Grid.SelectionMode.MULTI);
-
         obtenerTodosCursos();
         layoutGrid.add(grid);
 
@@ -249,7 +245,7 @@ public class CursosView extends Div {
             obtenerTodosCursos();
         });
 
-        mostrarMisCurosBtn.setVisible(userHasRole(Collections.singletonList("Alumno")));
+        mostrarMisCurosBtn.setVisible(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO)));
         mostrarMisCurosBtn.getStyle().set("cursor", "pointer");
         mostrarMisCurosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarMisCurosBtn.addClickListener(e -> {
@@ -305,7 +301,7 @@ public class CursosView extends Div {
         layoutBtn.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         layoutBtn.getElement().getStyle().set("margin-left", "auto");
         layoutBtn.add(nuevoCursoBtn);
-        nuevoCursoBtn.setVisible(userHasRole(Collections.singletonList("Admin")));
+        nuevoCursoBtn.setVisible(userHasRole(Collections.singletonList(Rol.ROL_ADMIN)));
 
         return layoutBtn;
     }
@@ -453,16 +449,34 @@ public class CursosView extends Div {
     }
 
     /**
-     * Función para matricular el alumno en el curso.
+     * Función para visualizar el listado de cursos que tiene un alumno.
      *
      */
-    private void matricularCursoAdmin(Curso curso) {
+    private void verListadoAlumnos(Curso curso) {
 
-        Dialog dg = new Dialog();
-        alumnosView = new AlumnosView(alumnosService);
-       // alumnosView.ocultarAcciones();
-        dg.add(alumnosView);
-        dg.open();
+        // Se configura el Dialog para visualizar el listado de cursos de un alumno
+        Dialog listadoAlumnosDg = new Dialog();
+        H2 titulo = new H2("Alumnos de: " + curso.getNombre());
+        Grid<Alumno> gridAlumnos= new Grid<>();
+        gridAlumnos.addColumn(Alumno::getIdAlumno).setHeader("ID").setKey("id").setAutoWidth(true);
+        gridAlumnos.addColumn(Alumno::getNombre).setHeader("Nombre").setKey("nombre").setAutoWidth(true);
+        gridAlumnos.addColumn(Alumno::getCorreo).setHeader("Correo").setKey("correo").setAutoWidth(true);
+        gridAlumnos.setItems(curso.getAlumnos());
+        HorizontalLayout btns = new HorizontalLayout();
+        Button cerrarBtn = new Button("Cerrar");
+        cerrarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        cerrarBtn.addClickShortcut(Key.ESCAPE);
+
+        cerrarBtn.addClickListener(click -> {
+            listadoAlumnosDg.close();
+        });
+
+        btns.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        //btns.getElement().getStyle().set("margin-left", "auto");
+        btns.add(cerrarBtn);
+        listadoAlumnosDg.add(titulo,gridAlumnos,btns);
+        listadoAlumnosDg.setWidth("600px");
+        listadoAlumnosDg.open();
     }
 
     /**
@@ -515,6 +529,7 @@ public class CursosView extends Div {
         grid.getColumnByKey("matricular").setVisible(false);
         grid.getColumnByKey("editar").setVisible(false);
         grid.getColumnByKey("eliminar").setVisible(false);
+        //grid.removeThemeName(String.valueOf(GridVariant.LUMO_ROW_STRIPES));
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.getSelectedItems();
         grid.setPageSize(5);

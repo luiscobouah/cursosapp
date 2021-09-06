@@ -12,6 +12,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
@@ -84,7 +85,7 @@ public class UsuariosView extends Div {
         grid.addColumn(Usuario::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getCorreo).setHeader("Correo").setKey("correo").setSortable(false).setAutoWidth(true);
         grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false).setAutoWidth(true);
-        grid.addColumn(Usuario::getStringRoles).setHeader("Roles").setKey("roles").setSortable(false).setAutoWidth(true);
+        grid.addColumn(Usuario::getStringRoles).setHeader("Rol").setKey("rol").setSortable(false).setAutoWidth(true);
         grid.addComponentColumn(item -> {
                     Icon editarIcon = new Icon(VaadinIcon.CHECK_CIRCLE_O);
                     if(item.isEnable()){
@@ -123,10 +124,11 @@ public class UsuariosView extends Div {
                 .setTextAlign(ColumnTextAlign.CENTER)
                 .setAutoWidth(true);
 
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.setColumnReorderingAllowed(true);
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
         //grid.setHeightByRows(true);
-        grid.setColumnReorderingAllowed(true);
         //grid.setSelectionMode(Grid.SelectionMode.MULTI);
         obtenerTodosUsuarios();
         layoutGrid.add(grid);

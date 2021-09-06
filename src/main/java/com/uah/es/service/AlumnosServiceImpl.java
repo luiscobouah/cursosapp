@@ -1,6 +1,7 @@
 package com.uah.es.service;
 
 import com.uah.es.model.Alumno;
+import com.uah.es.model.Curso;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,11 @@ public class AlumnosServiceImpl implements IAlumnosService {
     @Override
     public Alumno buscarAlumnoPorCorreo(String correo) {
         return template.getForObject(url+"/correo/"+correo, Alumno.class);
+    }
+
+    @Override
+    public Alumno[] buscarAlumnosPorNombre(String nombre) {
+        return template.getForObject(url + "/nombre/" + nombre, Alumno[].class);
     }
 
     @Override

@@ -12,6 +12,8 @@ public interface IAlumnosService {
 
     Alumno buscarAlumnoPorCorreo(String correo);
 
+    Alumno[] buscarAlumnosPorNombre(String nombre);
+
     boolean guardarAlumno(Alumno alumno);
 
     boolean actualizarAlumno(Alumno alumno);
