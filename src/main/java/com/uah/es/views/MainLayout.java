@@ -1,6 +1,8 @@
 package com.uah.es.views;
 
+import com.uah.es.model.Usuario;
 import com.uah.es.security.SecurityUtils;
+import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.alumnos.AlumnosView;
 import com.uah.es.views.cursos.CursosView;
 import com.uah.es.views.matriculas.MatriculasView;
@@ -11,9 +13,9 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -23,11 +25,15 @@ import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.server.VaadinServlet;
 import com.vaadin.flow.theme.Theme;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static com.uah.es.security.SecurityUtils.getEmailUser;
+
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -66,12 +72,14 @@ public class MainLayout extends AppLayout {
 
     }
 
+    IUsuariosService usuariosService;
     private final Tabs menu;
     private H1 viewTitle;
     //private AccessAnnotationChecker accessChecker;
 
-    public MainLayout() {
-        setPrimarySection(Section.DRAWER);
+    public MainLayout(IUsuariosService usuariosService) {
+        this.usuariosService=usuariosService;
+        //setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeaderContent());
         menu = createMenu();
         addToDrawer(createDrawerContent(menu));
@@ -88,14 +96,15 @@ public class MainLayout extends AppLayout {
         viewTitle = new H1();
         layout.add(viewTitle);
 
-        Avatar avatar = new Avatar();
-        avatar.addClassNames("ms-auto", "me-m");
-        layout.add(avatar);
+       /* Anchor cerrarSesion = new Anchor();*/
+
+
 
         return layout;
     }
 
     private Component createDrawerContent(Tabs menu) {
+
         VerticalLayout layout = new VerticalLayout();
         layout.setClassName("sidemenu-menu");
         layout.setSizeFull();
@@ -103,12 +112,20 @@ public class MainLayout extends AppLayout {
         layout.setSpacing(false);
         layout.getThemeList().set("spacing-s", true);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        HorizontalLayout logoLayout = new HorizontalLayout();
-        logoLayout.setId("logo");
-        logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-         logoLayout.add(new Image("icons/icon.png", "CursosApp logo"));
-        logoLayout.add(new H1("CursosApp"));
-        layout.add(logoLayout, menu);
+        VerticalLayout usuarioLayout = new VerticalLayout();
+        //logoLayout.setId("logo");
+
+        Avatar usuarioAvatar = new Avatar();
+        Usuario usuario = usuariosService.buscarUsuarioPorCorreo(getEmailUser());
+        usuarioAvatar.addThemeVariants(AvatarVariant.LUMO_XLARGE);
+
+        //avatar.addClassNames("ms-auto", "me-m");
+        //usuarioLayout.add(new Image("images/logo_small_icon_only.png", "CursosApp logo"));
+        usuarioLayout.add(usuarioAvatar);
+        usuarioLayout.add(new Label(usuario.getNombre()));
+        usuarioLayout.add(createLogoutLink());
+        usuarioLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.add(usuarioLayout,menu);
         return layout;
     }
 
@@ -154,6 +171,15 @@ public class MainLayout extends AppLayout {
         tab.add(link);
         ComponentUtil.setData(tab, Class.class, menuItemInfo.getView());
         return tab;
+    }
+
+    private static Anchor createLogoutLink() {
+        String contextPath = VaadinServlet.getCurrent().getServletContext().getContextPath();
+        Anchor a = new Anchor();
+        a.addClassNames("link-margin");
+        a.setText("Cerrar sesión");
+        a.setHref(contextPath + "/logout");
+        return a;
     }
 
     @Override

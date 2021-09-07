@@ -35,3 +35,7 @@
   background-color: var(--lumo-primary-color-10pct);
   color: var(--lumo-primary-text-color);
 }
+
+.link-margin {
+ margin-top: 0px;
+}

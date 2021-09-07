@@ -15,6 +15,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -43,12 +44,10 @@ public class MatriculasView extends VerticalLayout {
     AlumnosView alumnosView;
     Notification notificacionOK = new Notification("", 3000);
     Notification notificacionKO = new Notification("", 3000);
-
+    Button matricularBtn = new Button("Matricular",new Icon(VaadinIcon.OPEN_BOOK));
 
     Alumno alumnoSeleccionado = new Alumno();
     Curso cursoSeleccionado = new Curso();
-
-    Button matricularBtn = new Button("Matricular",new Icon(VaadinIcon.OPEN_BOOK));
 
     public MatriculasView(ICursosService cursosService, IMatriculasService matriculasService, IUsuariosService usuariosService, IAlumnosService alumnosService) {
 
@@ -62,13 +61,10 @@ public class MatriculasView extends VerticalLayout {
 
         matricularBtn.setEnabled(false);
 
+        VerticalLayout cursosLayout =  new VerticalLayout();
         cursosView = new CursosView(cursosService,matriculasService,usuariosService,alumnosService);
         cursosView.ocultarAcciones();
         cursosView.setWidth("100%");
-        alumnosView = new AlumnosView(alumnosService);
-        alumnosView.setWidth("100%");
-        alumnosView.setVisible(false);
-
         cursosView.addClickListener( e -> {
             cursoSeleccionado =  cursosView.cursoSeleccionado;
             matricularBtn.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
@@ -76,31 +72,33 @@ public class MatriculasView extends VerticalLayout {
             alumnosView.ocultarAcciones(cursoSeleccionado);
 
         });
+        cursosLayout.setPadding(false);
+        cursosLayout.setMargin(false);
+        cursosLayout.add(new H2("Cursos"),cursosView);
+
+
+        VerticalLayout alumnosLayout =  new VerticalLayout();
+        alumnosView = new AlumnosView(alumnosService);
+        alumnosView.setWidth("100%");
+        alumnosView.setVisible(false);
         alumnosView.addClickListener( e -> {
             alumnoSeleccionado =  alumnosView.alumnoSeleccionado;
             matricularBtn.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
         });
-
-        VerticalLayout cursosLayout =  new VerticalLayout();
-        cursosLayout.add(new Label("Cursos"),cursosView);
-
-
-        VerticalLayout alumnosLayout =  new VerticalLayout();
-        alumnosLayout.add(new Label("Alumnos"),alumnosView);
-
+        alumnosLayout.setPadding(false);
+        alumnosLayout.setMargin(false);
+        alumnosLayout.add(new H2("Alumnos"),alumnosView);
 
         HorizontalLayout gridsLayout = new HorizontalLayout();
         gridsLayout.setWidth("100%");
         gridsLayout.add(cursosLayout,alumnosLayout);
 
-
         HorizontalLayout btnsLayout = new HorizontalLayout();
         matricularBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         matricularBtn.addClickListener( e -> matricularAlumno(cursoSeleccionado,alumnoSeleccionado));
-        btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        //btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         btnsLayout.getElement().getStyle().set("margin-left", "auto");
         btnsLayout.add(matricularBtn);
-
         add(gridsLayout,btnsLayout);
 
     }/**
@@ -108,12 +106,10 @@ public class MatriculasView extends VerticalLayout {
      *
      */
     private void matricularAlumno(Curso curso, Alumno alumno) {
-
         // Se configura el Dialog para confirmar la matricula
         Dialog confirmacionDg = new Dialog();
         Label msjConfirmacion = new Label();
         msjConfirmacion.setText("¿Desea matricular el Alumno: "+alumno.getNombre()+" en el curso: "+curso.getNombre());
-
 
         Usuario usuario =  usuariosService.buscarUsuarioPorCorreo(alumno.getCorreo());
         usuario.setRoles(null);
