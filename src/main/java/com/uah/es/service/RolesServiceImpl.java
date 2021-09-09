@@ -5,21 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Service
 public class RolesServiceImpl implements IRolesService {
 
     @Autowired
     RestTemplate template;
 
-    String url = "http://localhost:8003/usuarios/roles";
+    String url = "http://localhost:8003/roles";
 
     @Override
-    public List<Rol> buscarTodos() {
+    public Rol[] buscarTodos() {
         Rol[] roles = template.getForObject(url, Rol[].class);
-        return Arrays.asList(roles);
+        return roles;
     }
 
     @Override

@@ -6,7 +6,7 @@ import com.uah.es.model.Matricula;
 
 public interface IMatriculasService {
 
-    //Page<Matricula> buscarTodas(Pageable pageable);
+    Matricula[] buscarTodas();
 
     //Page<Matricula> buscarMatriculasPorIdCurso(Integer idCurso, Pageable pageable);
 

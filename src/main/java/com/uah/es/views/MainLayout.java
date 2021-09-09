@@ -5,6 +5,7 @@ import com.uah.es.security.SecurityUtils;
 import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.alumnos.AlumnosView;
 import com.uah.es.views.cursos.CursosView;
+import com.uah.es.views.estadisticas.EstadisticasView;
 import com.uah.es.views.matriculas.MatriculasView;
 import com.uah.es.views.usuarios.UsuariosView;
 import com.vaadin.flow.component.Component;
@@ -143,9 +144,10 @@ public class MainLayout extends AppLayout {
     private List<Tab> createMenuItems() {
         MenuItemInfo[] menuItems = new MenuItemInfo[]{
                 new MenuItemInfo("Cursos", "la la-book-open", CursosView.class),
-                new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class), //
-                new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class), //
-                new MenuItemInfo("Matriculas", "la la-book", MatriculasView.class), //
+                new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class),
+                new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class),
+                new MenuItemInfo("Matriculas", "la la-book", MatriculasView.class),
+                new MenuItemInfo("Estadisticas", "la chart-pie-solid", EstadisticasView.class),
         };
 
         List<Tab> tabs = new ArrayList<>();

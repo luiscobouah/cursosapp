@@ -2,11 +2,10 @@ package com.uah.es.service;
 
 import com.uah.es.model.Rol;
 
-import java.util.List;
 
 public interface IRolesService {
 
-    List<Rol> buscarTodos();
+    Rol[] buscarTodos();
 
     Rol buscarRolPorId(Integer idRol);
 

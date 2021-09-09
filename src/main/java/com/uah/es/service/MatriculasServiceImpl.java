@@ -32,6 +32,11 @@ public class MatriculasServiceImpl implements IMatriculasService {
     String url = "http://localhost:8003/matriculas";
 
     @Override
+    public Matricula[] buscarTodas() {
+        return template.getForObject(url, Matricula[].class);
+    }
+
+    @Override
     public Matricula buscarMatriculaPorId(Integer idMatricula) {
         Matricula matricula = template.getForObject(url+"/"+idMatricula, Matricula.class);
         return matricula;
