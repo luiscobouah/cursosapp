@@ -67,26 +67,6 @@ public class CursosServiceImpl implements ICursosService {
         return result;
     }
 
-    /*
-    @Override
-    public boolean eliminarCurso(Integer idCurso) {
-
-        boolean result = false;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<?> httpEntity = new HttpEntity<>(headers);
-        ResponseEntity<Void> response = template.exchange(url, HttpMethod.DELETE, httpEntity,Void.class, idCurso);
-
-        // Verificar la respuesta de la petición
-        if (response.getStatusCode() == HttpStatus.OK) {
-            result = true;
-            System.out.println("Request Successful");
-        }
-
-        return result;
-    }*/
-
     @Override
     public boolean eliminarCurso(Integer idCurso) {
         boolean result = false;

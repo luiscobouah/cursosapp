@@ -529,6 +529,7 @@ public class CursosView extends Div {
         grid.getColumnByKey("matricular").setVisible(false);
         grid.getColumnByKey("editar").setVisible(false);
         grid.getColumnByKey("eliminar").setVisible(false);
+        grid.getColumnByKey("alumnos").setVisible(false);
         //grid.removeThemeName(String.valueOf(GridVariant.LUMO_ROW_STRIPES));
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.getSelectedItems();

@@ -4,12 +4,16 @@ import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
 import com.uah.es.service.IRolesService;
 import com.uah.es.service.IUsuariosService;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.notification.Notification;
@@ -72,6 +76,15 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         login.setI18n(configurarLoginEsp());
         login.setAction("login");
 
+        /*H1 title = new H1();
+        title.getStyle().set("color", "var(--lumo-base-color)");
+        Icon icon = VaadinIcon.VAADIN_H.create();
+        icon.setSize("30px");
+        icon.getStyle().set("top", "-4px");
+        title.add(icon);
+        title.add(new Text(" My App"));*/
+
+
         confirgurarFormRegistro();
 
         registrarseBtn.getStyle().set("cursor", "pointer");
@@ -80,7 +93,15 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             registroDg.open();
         });
 
-        add(new H1("Cursos App"), login,registrarseBtn);
+       H1 titulo = new H1("Cursos App ");
+       /* Image icono = new Image("images/logo_small_icon_only.png", "CursosApp logo");
+        icono.setWidth("30px");
+        icono.setHeight("30px");
+        titulo.add(icono);*/
+
+        //titulo.add(VaadinIcon.VAADIN_H.create());
+
+        add(titulo,login,registrarseBtn);
     }
 
     private LoginI18n configurarLoginEsp() {

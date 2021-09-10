@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -39,6 +37,12 @@ public class MatriculasServiceImpl implements IMatriculasService {
     @Override
     public Matricula buscarMatriculaPorId(Integer idMatricula) {
         Matricula matricula = template.getForObject(url+"/"+idMatricula, Matricula.class);
+        return matricula;
+    }
+
+    @Override
+    public Matricula buscarMatriculaPorIdCursoIdUsuario(Integer idCurso, Integer idUsuario) {
+        Matricula matricula = template.getForObject(url+"/cursousuario/"+idCurso+"/"+idUsuario, Matricula.class);
         return matricula;
     }
 
@@ -88,8 +92,20 @@ public class MatriculasServiceImpl implements IMatriculasService {
     }
 
     @Override
-    public void eliminarMatricula(Integer idMatricula) {
-        template.delete(url+ "/" +  idMatricula);
+    public boolean eliminarMatricula(Curso curso, Alumno alumno) {
+        Usuario usuario =  usuariosService.buscarUsuarioPorCorreo(alumno.getCorreo());
+        Matricula matricula = buscarMatriculaPorIdCursoIdUsuario(curso.getIdCurso(),usuario.getIdUsuario());
+
+        boolean resultado =  false;
+        try {
+            template.delete(url+ "/" +  matricula.getIdMatricula());
+            alumnosService.desinscribirCurso(alumno.getIdAlumno(),curso.getIdCurso());
+            resultado = true;
+        } catch (HttpClientErrorException ex){
+            resultado = false;
+        }
+
+        return resultado;
     }
 
 }

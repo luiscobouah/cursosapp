@@ -62,11 +62,9 @@ public class MainLayout extends AppLayout {
         public String getText() {
             return text;
         }
-
         public String getIconClass() {
             return iconClass;
         }
-
         public Class<? extends Component> getView() {
             return view;
         }
@@ -147,7 +145,7 @@ public class MainLayout extends AppLayout {
                 new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class),
                 new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class),
                 new MenuItemInfo("Matriculas", "la la-book", MatriculasView.class),
-                new MenuItemInfo("Estadisticas", "la chart-pie-solid", EstadisticasView.class),
+                new MenuItemInfo("Estadisticas", "la la-chart-area", EstadisticasView.class),
         };
 
         List<Tab> tabs = new ArrayList<>();

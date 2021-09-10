@@ -4,7 +4,6 @@ import com.uah.es.model.Alumno;
 
 
 public interface IAlumnosService {
-    //Page<Alumno> buscarTodos(Pageable pageable);
 
     Alumno[] buscarTodos();
 
@@ -21,4 +20,6 @@ public interface IAlumnosService {
     boolean eliminarAlumno(Integer idAlumno);
 
     boolean inscribirCurso(Integer idAlumno, Integer idCurso);
+
+    boolean desinscribirCurso(Integer idAlumno, Integer idCurso);
 }

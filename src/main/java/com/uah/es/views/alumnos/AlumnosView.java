@@ -402,7 +402,7 @@ public class AlumnosView extends Div {
      *
      */
     public void ocultarAcciones(Curso curso) {
-        obtenerAlumnoNoMatriculados(curso);
+        grid.setItems(curso.getAlumnos());
         grid.getColumnByKey("cursos").setVisible(false);
         grid.getColumnByKey("editar").setVisible(false);
         grid.getColumnByKey("eliminar").setVisible(false);

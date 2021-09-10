@@ -88,4 +88,18 @@ public class AlumnosServiceImpl implements IAlumnosService {
 
         return result;
     }
+
+    @Override
+    public boolean desinscribirCurso(Integer idAlumno, Integer idCurso) {
+        boolean result = false;
+
+        try {
+            template.getForObject(url+"/desc/"+idCurso+"/"+idAlumno, String.class);
+            result = true;
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return result;
+    }
 }

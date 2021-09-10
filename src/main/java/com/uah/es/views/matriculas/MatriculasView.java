@@ -2,8 +2,6 @@ package com.uah.es.views.matriculas;
 
 import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
-import com.uah.es.model.Matricula;
-import com.uah.es.model.Usuario;
 import com.uah.es.service.IAlumnosService;
 import com.uah.es.service.ICursosService;
 import com.uah.es.service.IMatriculasService;
@@ -44,7 +42,7 @@ public class MatriculasView extends VerticalLayout {
     AlumnosView alumnosView;
     Notification notificacionOK = new Notification("", 3000);
     Notification notificacionKO = new Notification("", 3000);
-    Button matricularBtn = new Button("Matricular",new Icon(VaadinIcon.OPEN_BOOK));
+    Button eliminarMatricula = new Button("Eliminar matrícula",new Icon(VaadinIcon.OPEN_BOOK));
 
     Alumno alumnoSeleccionado = new Alumno();
     Curso cursoSeleccionado = new Curso();
@@ -59,15 +57,36 @@ public class MatriculasView extends VerticalLayout {
         notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        matricularBtn.setEnabled(false);
+        inicializarViews();
 
+        eliminarMatricula.setEnabled(false);
+
+        HorizontalLayout gridsLayout = new HorizontalLayout();
+        gridsLayout.setWidth("100%");
+        gridsLayout.add(configurarCursosView(),configurarAlumnosView());
+
+        HorizontalLayout btnsLayout = new HorizontalLayout();
+        eliminarMatricula.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        eliminarMatricula.addClickListener( e -> eliminarMatricula(cursoSeleccionado,alumnoSeleccionado));
+        btnsLayout.getElement().getStyle().set("margin-left", "auto");
+        btnsLayout.add(eliminarMatricula);
+
+        add(gridsLayout,btnsLayout);
+
+    }
+
+    private void inicializarViews() {
+        cursosView = new CursosView(cursosService, matriculasService, usuariosService, alumnosService);
+        alumnosView = new AlumnosView(alumnosService);
+    }
+
+    private VerticalLayout configurarCursosView() {
         VerticalLayout cursosLayout =  new VerticalLayout();
-        cursosView = new CursosView(cursosService,matriculasService,usuariosService,alumnosService);
         cursosView.ocultarAcciones();
         cursosView.setWidth("100%");
         cursosView.addClickListener( e -> {
             cursoSeleccionado =  cursosView.cursoSeleccionado;
-            matricularBtn.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
+            eliminarMatricula.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
             alumnosView.setVisible(cursoSeleccionado.getIdCurso()!= null);
             alumnosView.ocultarAcciones(cursoSeleccionado);
 
@@ -76,60 +95,48 @@ public class MatriculasView extends VerticalLayout {
         cursosLayout.setMargin(false);
         cursosLayout.add(new H2("Cursos"),cursosView);
 
+        return cursosLayout;
+    }
 
+    private VerticalLayout configurarAlumnosView() {
         VerticalLayout alumnosLayout =  new VerticalLayout();
-        alumnosView = new AlumnosView(alumnosService);
         alumnosView.setWidth("100%");
         alumnosView.setVisible(false);
         alumnosView.addClickListener( e -> {
             alumnoSeleccionado =  alumnosView.alumnoSeleccionado;
-            matricularBtn.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
+            eliminarMatricula.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
         });
         alumnosLayout.setPadding(false);
         alumnosLayout.setMargin(false);
         alumnosLayout.add(new H2("Alumnos"),alumnosView);
+        return alumnosLayout;
+    }
 
-        HorizontalLayout gridsLayout = new HorizontalLayout();
-        gridsLayout.setWidth("100%");
-        gridsLayout.add(cursosLayout,alumnosLayout);
-
-        HorizontalLayout btnsLayout = new HorizontalLayout();
-        matricularBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        matricularBtn.addClickListener( e -> matricularAlumno(cursoSeleccionado,alumnoSeleccionado));
-        //btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        btnsLayout.getElement().getStyle().set("margin-left", "auto");
-        btnsLayout.add(matricularBtn);
-        add(gridsLayout,btnsLayout);
-
-    }/**
+    /**
      * Función para matricular el alumno en el curso.
      *
      */
-    private void matricularAlumno(Curso curso, Alumno alumno) {
+    private void eliminarMatricula(Curso curso, Alumno alumno) {
         // Se configura el Dialog para confirmar la matricula
         Dialog confirmacionDg = new Dialog();
         Label msjConfirmacion = new Label();
-        msjConfirmacion.setText("¿Desea matricular el Alumno: "+alumno.getNombre()+" en el curso: "+curso.getNombre());
-
-        Usuario usuario =  usuariosService.buscarUsuarioPorCorreo(alumno.getCorreo());
-        usuario.setRoles(null);
-        Matricula matricula = new Matricula(curso.getIdCurso(),usuario);
+        msjConfirmacion.setText("¿Desea eliminar la matrícula del Alumno: "+alumno.getNombre()+" del curso: "+curso.getNombre());
 
         HorizontalLayout btnsLayout = new HorizontalLayout();
         Button cancelarBtn = new Button("Cancelar");
-        Button eliminarBtn = new Button("Matricular");
+        Button eliminarBtn = new Button("Eliminar matrícula");
         eliminarBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         cancelarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         eliminarBtn.addClickShortcut(Key.ENTER);
         cancelarBtn.addClickShortcut(Key.ESCAPE);
 
         eliminarBtn.addClickListener(click -> {
-
-            if(matriculasService.guardarMatricula(matricula)){
-                notificacionOK.setText("Se ha matriculado correctamente en el curso");
+            if(matriculasService.eliminarMatricula(curso,alumno)){
+                notificacionOK.setText("Se ha eliminado la matrícula correctamente");
                 notificacionOK.open();
+                inicializarViews();
             } else {
-                notificacionKO.setText("Error al matricularse en el curso");
+                notificacionKO.setText("Error al eliminar la matrícula del curso");
                 notificacionKO.open();
             }
             confirmacionDg.close();
