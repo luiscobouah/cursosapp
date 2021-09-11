@@ -576,8 +576,9 @@ public class CursosView extends Div {
             }
             StringWriter stringWriter = new StringWriter();
             CSVWriter csvWriter = new CSVWriter(stringWriter);
+            csvWriter.setSeparatorChar(';');
             csvWriter.writeNext("id", "Nombre", "Duración (H)", "Profesor", "Precio (€)", "Categoría");
-            cursosCsv.forEach(c -> csvWriter.writeNext("" + c.getIdCurso(), c.getNombre(),c.getDuracion().toString(),c.getProfesor(),c.getPrecio().toString(),c.getCategoria())
+            cursosCsv.forEach(c -> csvWriter.writeNext(String.valueOf(c.getIdCurso()), c.getNombre(),c.getDuracion().toString(),c.getProfesor(),c.getPrecio().toString(),c.getCategoria())
             );
             return IOUtils.toInputStream(stringWriter.toString(), "UTF-8");
 

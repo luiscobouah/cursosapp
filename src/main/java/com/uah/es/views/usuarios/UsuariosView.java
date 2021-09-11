@@ -2,7 +2,6 @@ package com.uah.es.views.usuarios;
 
 
 import com.helger.commons.csv.CSVWriter;
-import com.uah.es.model.Alumno;
 import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
 import com.uah.es.service.IRolesService;
@@ -40,7 +39,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
+
 
 @PageTitle("Usuarios")
 @Route(value = "usuarios", layout = MainLayout.class)
@@ -94,7 +93,7 @@ public class UsuariosView extends Div {
         grid.addColumn(Usuario::getIdUsuario).setHeader("ID").setKey("id").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getCorreo).setHeader("Correo").setKey("correo").setSortable(false).setAutoWidth(true);
-        grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false).setAutoWidth(true);
+        //grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false).setAutoWidth(true);
         grid.addColumn(Usuario::getStringRoles).setHeader("Rol").setKey("rol").setSortable(false).setAutoWidth(true);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.CHECK_CIRCLE_O);
@@ -382,8 +381,9 @@ public class UsuariosView extends Div {
 
             StringWriter stringWriter = new StringWriter();
             CSVWriter csvWriter = new CSVWriter(stringWriter);
-            csvWriter.writeNext("id", "Nombre", "Correo","Clave","Roles");
-            listaUsuarios.forEach(u -> csvWriter.writeNext("" + u.getIdUsuario(), u.getNombre(),u.getCorreo(),u.getClave(),u.getStringRoles())
+            csvWriter.setSeparatorChar(';');
+            csvWriter.writeNext("id", "Nombre", "Correo","Rol");
+            listaUsuarios.forEach(u -> csvWriter.writeNext(String.valueOf(u.getIdUsuario()), u.getNombre(),u.getCorreo(),u.getStringRoles())
             );
             return IOUtils.toInputStream(stringWriter.toString(), "UTF-8");
 

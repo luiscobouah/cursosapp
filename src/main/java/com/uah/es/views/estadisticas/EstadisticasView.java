@@ -52,13 +52,14 @@ public class EstadisticasView extends Div {
 
         //Configuracion de componente Board para visualizar los distintos gráficos
         Board board = new Board();
-
         if(userHasRole(Collections.singletonList(Rol.ROL_ADMIN))){
             board.addRow(graficoCursosAlumnos(Rol.ROL_ADMIN),graficoRolesUsuarios());
             board.addRow(graficoMatriculasPorMes());
         }
         if(userHasRole(Collections.singletonList(Rol.ROL_PROFESOR))){
-            board.addRow(graficoCursosAlumnos(Rol.ROL_PROFESOR));
+            board.addRow(graficoCursosAlumnos(Rol.ROL_PROFESOR)).setHeight("70%");
+            board.setHeightFull();
+            setHeightFull();
         }
         add(board);
     }

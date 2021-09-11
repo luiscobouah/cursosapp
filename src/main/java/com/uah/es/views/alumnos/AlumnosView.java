@@ -33,6 +33,7 @@ import org.vaadin.klaudeta.PaginatedGrid;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /*https://vaadin.com/directory/component/grid-pagination/samples*/
@@ -364,10 +365,11 @@ public class AlumnosView extends Div {
 
             StringWriter stringWriter = new StringWriter();
             CSVWriter csvWriter = new CSVWriter(stringWriter);
-            csvWriter.writeNext("id", "Nombre", "Correo","Cursos");
-            listaAlumnos.forEach(a -> csvWriter.writeNext("" + a.getIdAlumno(), a.getNombre(),a.getCorreo(),a.getStringCursos())
+            csvWriter.setSeparatorChar(';');
+            csvWriter.writeNext("id", "Nombre", "Correo");
+            listaAlumnos.forEach(a -> csvWriter.writeNext(String.valueOf(a.getIdAlumno()), a.getNombre(),a.getCorreo())
             );
-            return IOUtils.toInputStream(stringWriter.toString(), "UTF-8");
+            return IOUtils.toInputStream(stringWriter.toString(), "UTF8");
 
         } catch (IOException e) {
             e.printStackTrace();
