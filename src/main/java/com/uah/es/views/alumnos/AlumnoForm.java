@@ -8,6 +8,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -26,6 +27,8 @@ public class AlumnoForm extends FormLayout {
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
 
+    H2 titulo = new H2("Alumno");
+
     Binder<Alumno> binder = new BeanValidationBinder<>(Alumno.class);
     private Alumno alumno = new Alumno();
 
@@ -40,7 +43,8 @@ public class AlumnoForm extends FormLayout {
                 .asRequired("Campo requerido")
                 .bind( Alumno::getNombre,Alumno::setNombre);
 
-        add(nombre,correo,configurarBtnsLayout());
+        setMaxWidth("600px");
+        add(titulo,nombre,correo,configurarBtnsLayout());
     }
 
     private Component configurarBtnsLayout() {

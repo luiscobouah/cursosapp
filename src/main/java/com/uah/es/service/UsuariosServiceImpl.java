@@ -24,6 +24,11 @@ public class UsuariosServiceImpl implements IUsuariosService {
         return template.getForObject(url, Usuario[].class);
     }
 
+    @Override
+    public Usuario[] buscarUsuariosPorRol(Integer idRol) {
+        return template.getForObject(url+"/rol/"+idRol, Usuario[].class);
+    }
+
 
     @Override
     public Usuario buscarUsuarioPorId(Integer idUsuario) {

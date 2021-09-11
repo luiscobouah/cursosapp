@@ -386,6 +386,18 @@ public class AlumnosView extends Div {
     }
 
     /**
+     * Función para actualizar el grid con todos los alumnos que se han dado de alta.
+     *
+     */
+    private void obtenerAlumnoNoMatriculados(Curso curso) {
+        ArrayList<Alumno> alumnos = new ArrayList(listaAlumnos);
+        if(curso.getAlumnos()!=null){
+            alumnos.removeAll(curso.getAlumnos());
+            grid.setItems(alumnos);
+        }
+    }
+
+    /**
      * Función para ocular las acciones cuando se llama desde MatriculasView.
      *
      */

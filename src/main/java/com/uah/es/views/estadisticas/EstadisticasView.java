@@ -20,11 +20,15 @@ import org.springframework.security.access.annotation.Secured;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.uah.es.security.SecurityUtils.getEmailUser;
+import static com.uah.es.security.SecurityUtils.userHasRole;
+
 @PageTitle("Estadísticas")
-@Secured("Admin")
+@Secured({"Admin","Profesor"})
 @Route(value = "estadisticas", layout = MainLayout.class)
 
 public class EstadisticasView extends Div {
@@ -48,12 +52,18 @@ public class EstadisticasView extends Div {
 
         //Configuracion de componente Board para visualizar los distintos gráficos
         Board board = new Board();
-        board.addRow(graficoCursosAlumnos(),graficoRolesUsuarios());
-        board.addRow(graficoMatriculasPorMes());
+
+        if(userHasRole(Collections.singletonList(Rol.ROL_ADMIN))){
+            board.addRow(graficoCursosAlumnos(Rol.ROL_ADMIN),graficoRolesUsuarios());
+            board.addRow(graficoMatriculasPorMes());
+        }
+        if(userHasRole(Collections.singletonList(Rol.ROL_PROFESOR))){
+            board.addRow(graficoCursosAlumnos(Rol.ROL_PROFESOR));
+        }
         add(board);
     }
 
-    private Component graficoCursosAlumnos() {
+    private Component graficoCursosAlumnos(String rol) {
         Chart graficoCursos = new Chart(ChartType.PIE);
 
         Configuration conf = graficoCursos.getConfiguration();
@@ -66,17 +76,31 @@ public class EstadisticasView extends Div {
         Tooltip tooltip = new Tooltip();
         conf.setTooltip(tooltip);
 
+        if (rol.equals(Rol.ROL_PROFESOR)) {
+            PlotOptionsPie plotOptions = new PlotOptionsPie();
+            plotOptions.setAllowPointSelect(true);
+            plotOptions.setCursor(Cursor.POINTER);
+            plotOptions.setShowInLegend(true);
+            conf.setPlotOptions(plotOptions);
+        }
+
         //Datos a visualizar
         DataSeries cursos = new DataSeries("Alumnos");
-        //Se obtienen todos los cursos
-        listaCursos = Arrays.asList(cursosService.buscarTodos());
+        //Se obtienen todos los cursos dependiendo del ROL.
+        if (rol.equals(Rol.ROL_ADMIN)){
+            listaCursos = Arrays.asList(cursosService.buscarTodos());
+        }else {
+            Usuario usuario = usuariosService.buscarUsuarioPorCorreo(getEmailUser());
+            listaCursos = Arrays.asList(cursosService.buscarCursosPorProfesor(usuario.getNombre()));
+        }
+
         listaCursos.forEach(curso -> {
             //Para cada curso se recupera el nombre y el total de alumnos que tiene
             DataSeriesItem dato = new DataSeriesItem(curso.getNombre(),curso.getAlumnos().size());
             cursos.add(dato);
         });
         conf.setSeries(cursos);
-        //chart.setVisibilityTogglingDisabled(true);
+        graficoCursos.setVisibilityTogglingDisabled(true);
         return  graficoCursos;
     }
 

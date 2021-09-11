@@ -51,7 +51,9 @@
     "line-awesome": "1.3.0",
     "lit-element": "^2.2.1",
     "lit-html": "^1.1.2",
-    "lumo-css-framework": "^4.0.10"
+    "lumo-css-framework": "^4.0.10",
+    "retry": "0.12.0",
+    "tippy.js": "6.3.1"
   },
   "devDependencies": {
     "chokidar": "^3.5.0",
@@ -127,7 +129,9 @@
       "line-awesome": "1.3.0",
       "lit-element": "^2.2.1",
       "lit-html": "^1.1.2",
-      "lumo-css-framework": "^4.0.10"
+      "lumo-css-framework": "^4.0.10",
+      "retry": "0.12.0",
+      "tippy.js": "6.3.1"
     },
     "devDependencies": {
       "chokidar": "^3.5.0",
@@ -148,6 +152,6 @@
       "webpack-dev-server": "3.11.0",
       "webpack-merge": "4.2.2"
     },
-    "hash": "0acfb8098343739c5d4f30cdba4080be2cdd43668dba8bb34bd1e6db0d559101"
+    "hash": "48a26c3ca2860905f5bd60108fea59ddcd2f262c4d460507079b08e7c544d747"
   }
 }

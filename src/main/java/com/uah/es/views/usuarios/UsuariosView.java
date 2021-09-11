@@ -3,6 +3,7 @@ package com.uah.es.views.usuarios;
 
 import com.helger.commons.csv.CSVWriter;
 import com.uah.es.model.Alumno;
+import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
 import com.uah.es.service.IRolesService;
 import com.uah.es.service.IUsuariosService;
@@ -24,6 +25,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -37,6 +39,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 @PageTitle("Usuarios")
 @Route(value = "usuarios", layout = MainLayout.class)
@@ -52,6 +56,7 @@ public class UsuariosView extends Div {
     PaginatedGrid<Usuario> grid = new PaginatedGrid<>();
     TextField nombreFiltro = new TextField();
     TextField correoFiltro = new TextField();
+    Select<String> rolFiltro = new Select<>();
 
     Button buscarBtn = new Button("Buscar");
     Button mostrarTodosBtn = new Button("Mostrar todos");
@@ -61,6 +66,7 @@ public class UsuariosView extends Div {
     Notification notificacionKO = new Notification("", 3000);
 
     List<Usuario> listaUsuarios = new ArrayList<Usuario>();
+    List<Rol> listaRoles = new ArrayList<>();
 
     public UsuariosView(IUsuariosService usuariosService, IRolesService rolesService) {
 
@@ -160,16 +166,32 @@ public class UsuariosView extends Div {
         correoFiltro.setClearButtonVisible(true);
         correoFiltro.setValueChangeMode(ValueChangeMode.EAGER);
 
+        rolFiltro.setLabel("Rol");
+        listaRoles=Arrays.asList(rolesService.buscarTodos());
+        List<String> roles = new ArrayList<>();
+        roles.add("");
+        listaRoles.forEach(rol -> {
+            roles.add(rol.getAuthority());
+        });
+        rolFiltro.setItems(roles);
+
         buscarBtn.setEnabled(false);
 
         // Se habilita el btn buscar solo cuando el nombre tenga valor
         nombreFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!Objects.equals(nombreFiltro.getValue(), ""));
             correoFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
+            rolFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
         });
         correoFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!Objects.equals(correoFiltro.getValue(), ""));
             nombreFiltro.setEnabled(Objects.equals(correoFiltro.getValue(), ""));
+            rolFiltro.setEnabled(Objects.equals(correoFiltro.getValue(), ""));
+        });
+        rolFiltro.addValueChangeListener(e -> {
+            buscarBtn.setEnabled(!Objects.equals(rolFiltro.getValue(), ""));
+            nombreFiltro.setEnabled(Objects.equals(rolFiltro.getValue(), ""));
+            correoFiltro.setEnabled(Objects.equals(rolFiltro.getValue(), ""));
         });
 
         buscarBtn.getStyle().set("cursor", "pointer");
@@ -179,8 +201,14 @@ public class UsuariosView extends Div {
         mostrarTodosBtn.getStyle().set("cursor", "pointer");
         mostrarTodosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarTodosBtn.addClickListener(e -> {
+            //Limpiar los buscadores
             nombreFiltro.clear();
             correoFiltro.clear();
+            rolFiltro.setValue("");
+            // Habilitar los buscadores
+            nombreFiltro.setEnabled(true);
+            correoFiltro.setEnabled(true);
+            rolFiltro.setEnabled(true);
             obtenerTodosUsuarios();
         });
 
@@ -188,7 +216,7 @@ public class UsuariosView extends Div {
         layoutBtns.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         layoutBtns.add(buscarBtn,mostrarTodosBtn);
 
-        buscadorLayout.add(nombreFiltro, correoFiltro,layoutBtns);
+        buscadorLayout.add(nombreFiltro, correoFiltro,rolFiltro,layoutBtns);
         return buscadorLayout;
     }
 
@@ -236,12 +264,22 @@ public class UsuariosView extends Div {
     private void filtrar() {
         String nombre = nombreFiltro.getValue();
         String profesor = correoFiltro.getValue();
+        String rol = rolFiltro.getValue();
 
         if(!Objects.equals(nombre, "")){
             listaUsuarios = Collections.singletonList(usuariosService.buscarUsuarioPorNombre(nombre));
         }
         if(!Objects.equals(profesor, "")){
             listaUsuarios = Collections.singletonList(usuariosService.buscarUsuarioPorCorreo(profesor));
+        }
+        if(!Objects.equals(rol, "") && rol!=null){
+            AtomicInteger idRol=new AtomicInteger();
+            listaRoles.forEach(r ->{
+                if(r.getAuthority().equals(rol)){
+                    idRol.set(r.getIdRol());
+                }
+            });
+            listaUsuarios = Arrays.asList(usuariosService.buscarUsuariosPorRol(idRol.get()));
         }
         grid.setItems(listaUsuarios);
 

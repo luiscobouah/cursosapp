@@ -1,6 +1,7 @@
 package com.uah.es.views.cursos;
 
 //https://vaadin.com/components/vaadin-ordered-layout/java-examples
+//https://vaadin.com/directory/component/tooltips4vaadin/samples
 
 import com.helger.commons.csv.CSVWriter;
 import com.uah.es.model.*;
@@ -33,9 +34,9 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.StreamResource;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.io.IOUtils;
 import org.vaadin.klaudeta.PaginatedGrid;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -74,8 +75,8 @@ public class CursosView extends Div {
     List<Curso> listaMisCursos = new ArrayList<Curso>();
     List<Curso> listaCursos = new ArrayList<Curso>();
     Alumno alumno = new Alumno();
+    Usuario usuario = new Usuario();
     boolean isListadoMisCursos = false;
-    public  Curso cursoSeleccionado = new Curso();
 
     public CursosView(ICursosService cursosService, IMatriculasService matriculasService, IUsuariosService usuariosService, IAlumnosService alumnosService) {
 
@@ -90,6 +91,11 @@ public class CursosView extends Div {
         if(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO))){
             alumno = alumnosService.buscarAlumnoPorCorreo(getEmailUser());
             listaMisCursos = alumno.getCursos();
+        }
+
+        if(userHasRole(Collections.singletonList(Rol.ROL_PROFESOR))){
+            usuario = usuariosService.buscarUsuarioPorCorreo(getEmailUser());
+            listaMisCursos = Arrays.asList(cursosService.buscarCursosPorProfesor(usuario.getNombre()));
         }
 
         addClassName("cursos-view");
@@ -153,18 +159,26 @@ public class CursosView extends Div {
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.OPEN_BOOK);
             if (listaMisCursos.contains(item)){
-                editarIcon.setColor("gray");
-                editarIcon.setVisible(false);
+                Tooltips.getCurrent().setTooltip(editarIcon, "Eliminar matrícula");
+                editarIcon.setColor("red");
             } else {
-                editarIcon.setColor("blue");
+                Tooltips.getCurrent().setTooltip(editarIcon, "Matricular");
+                editarIcon.setColor("green");
             }
             editarIcon.getStyle().set("cursor", "pointer");
             editarIcon.setSize("18px");
-            editarIcon.addClickListener(e -> matricularCurso(item));
+            editarIcon.addClickListener(e -> {
+                if(listaMisCursos.contains(item)){
+                    eliminarMatricula(item);
+                } else {
+                    matricularCurso(item);
+                }
+            }
+            );
             return editarIcon;
         })
         .setKey("matricular")
-        .setHeader("Matricular")
+        .setHeader("Matrícula")
         .setTextAlign(ColumnTextAlign.CENTER)
         .setAutoWidth(true)
         .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO)));
@@ -228,7 +242,6 @@ public class CursosView extends Div {
         mostrarTodosBtn.getStyle().set("cursor", "pointer");
         mostrarTodosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarTodosBtn.addClickListener(e -> {
-            //Cambiar titulo grid
             //Limpiar los buscadores
             nombreFiltro.clear();
             profesorFiltro.clear();
@@ -240,7 +253,7 @@ public class CursosView extends Div {
             obtenerTodosCursos();
         });
 
-        mostrarMisCurosBtn.setVisible(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO)));
+        mostrarMisCurosBtn.setVisible(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO))||userHasRole(Collections.singletonList(Rol.ROL_PROFESOR)));
         mostrarMisCurosBtn.getStyle().set("cursor", "pointer");
         mostrarMisCurosBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         mostrarMisCurosBtn.addClickListener(e -> {
@@ -282,7 +295,7 @@ public class CursosView extends Div {
      */
     private Component configurarFormulario(){
 
-        cursoForm = new CursoForm();
+        cursoForm = new CursoForm(usuariosService);
         cursoForm.addListener(CursoForm.GuardarEvent.class, this::guardarCurso);
         cursoForm.addListener(CursoForm.CerrarEvent.class, e -> cerrarFormulario());
         formularioDg.add(cursoForm);
@@ -341,7 +354,15 @@ public class CursosView extends Div {
      */
     private void obtenerMisCursos() {
         isListadoMisCursos = true;
-        listaMisCursos = alumnosService.buscarAlumnoPorCorreo(getEmailUser()).getCursos();
+        if(userHasRole(Collections.singletonList(Rol.ROL_ALUMNO))){
+            alumno = alumnosService.buscarAlumnoPorCorreo(getEmailUser());
+            listaMisCursos = alumno.getCursos();
+        }
+
+        if(userHasRole(Collections.singletonList(Rol.ROL_PROFESOR))){
+            usuario = usuariosService.buscarUsuarioPorCorreo(getEmailUser());
+            listaMisCursos = Arrays.asList(cursosService.buscarCursosPorProfesor(usuario.getNombre()));
+        }
         grid.setItems(listaMisCursos);
     }
 
@@ -469,6 +490,48 @@ public class CursosView extends Div {
     }
 
     /**
+     * Función para eliminar la matricula del alumno en el curso.
+     *
+     */
+    private void eliminarMatricula(Curso curso) {
+        // Se configura el Dialog para confirmar la matricula
+        Dialog confirmacionDg = new Dialog();
+        Label msjConfirmacion = new Label();
+        msjConfirmacion.setText("¿Desea eliminar la matrícula del curso: "+curso.getNombre());
+
+        HorizontalLayout btnsLayout = new HorizontalLayout();
+        Button cancelarBtn = new Button("Cancelar");
+        Button eliminarBtn = new Button("Eliminar matrícula");
+        eliminarBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        cancelarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        eliminarBtn.addClickShortcut(Key.ENTER);
+        cancelarBtn.addClickShortcut(Key.ESCAPE);
+
+        eliminarBtn.addClickListener(click -> {
+            if(matriculasService.eliminarMatricula(curso,alumno)){
+                notificacionOK.setText("Se ha eliminado la matrícula correctamente");
+                notificacionOK.open();
+                //inicializarViews();
+            } else {
+                notificacionKO.setText("Error al eliminar la matrícula del curso");
+                notificacionKO.open();
+            }
+            listaMisCursos = alumnosService.buscarAlumnoPorCorreo(getEmailUser()).getCursos();
+            confirmacionDg.close();
+            obtenerTodosCursos();
+
+        });
+        cancelarBtn.addClickListener(click -> {
+            confirmacionDg.close();
+        });
+        btnsLayout.setPadding(true);
+        btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btnsLayout.add(cancelarBtn,eliminarBtn);
+        confirmacionDg.add(msjConfirmacion,btnsLayout);
+        confirmacionDg.open();
+    }
+
+    /**
      * Función para visualizar el listado de cursos que tiene un alumno.
      *
      */
@@ -476,7 +539,7 @@ public class CursosView extends Div {
 
         // Se configura el Dialog para visualizar el listado de cursos de un alumno
         Dialog listadoAlumnosDg = new Dialog();
-        H2 titulo = new H2("Alumnos de: " + curso.getNombre());
+        H2 titulo = new H2("Alumnos en " + curso.getNombre());
         Grid<Alumno> gridAlumnos= new Grid<>();
         gridAlumnos.addColumn(Alumno::getIdAlumno).setHeader("ID").setKey("id").setAutoWidth(true);
         gridAlumnos.addColumn(Alumno::getNombre).setHeader("Nombre").setKey("nombre").setAutoWidth(true);
@@ -492,7 +555,6 @@ public class CursosView extends Div {
         });
 
         btns.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        //btns.getElement().getStyle().set("margin-left", "auto");
         btns.add(cerrarBtn);
         listadoAlumnosDg.add(titulo,gridAlumnos,btns);
         listadoAlumnosDg.setWidth("600px");
@@ -530,42 +592,9 @@ public class CursosView extends Div {
      *
      */
     private void cerrarFormulario() {
-
         Curso curso = new Curso();
         cursoForm.setCurso(curso);
         formularioDg.close();
-    }
-
-    /**
-     * Función ocultas las acciones cuando se llama desde MatriculasView.
-     *
-     */
-    public void configuracionMatriculasView() {
-
-        grid.getColumnByKey("duracion").setVisible(false);
-        grid.getColumnByKey("profesor").setVisible(false);
-        grid.getColumnByKey("precio").setVisible(false);
-        grid.getColumnByKey("categoria").setVisible(false);
-        grid.getColumnByKey("matricular").setVisible(false);
-        grid.getColumnByKey("editar").setVisible(false);
-        grid.getColumnByKey("eliminar").setVisible(false);
-        grid.getColumnByKey("alumnos").setVisible(false);
-        //grid.removeThemeName(String.valueOf(GridVariant.LUMO_ROW_STRIPES));
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        grid.getSelectedItems();
-        grid.setPageSize(5);
-        linkDescargaCsv.setVisible(false);
-        nuevoCursoBtn.setVisible(false);
-        profesorFiltro.setVisible(false);
-        categoriaFiltro.setVisible(false);
-
-        grid.addSelectionListener(e ->{
-            if(e.getFirstSelectedItem().isPresent()){
-                cursoSeleccionado = e.getFirstSelectedItem().get();
-            } else {
-                cursoSeleccionado = new Curso();
-            }
-        });
     }
 
 }

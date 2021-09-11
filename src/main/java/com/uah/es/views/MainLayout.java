@@ -6,7 +6,6 @@ import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.alumnos.AlumnosView;
 import com.uah.es.views.cursos.CursosView;
 import com.uah.es.views.estadisticas.EstadisticasView;
-import com.uah.es.views.matriculas.MatriculasView;
 import com.uah.es.views.usuarios.UsuariosView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
@@ -16,7 +15,6 @@ import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -145,8 +143,7 @@ public class MainLayout extends AppLayout {
                 new MenuItemInfo("Cursos", "la la-book-open", CursosView.class),
                 new MenuItemInfo("Alumnos", "la la-user-graduate", AlumnosView.class),
                 new MenuItemInfo("Usuarios", "la la-users", UsuariosView.class),
-                new MenuItemInfo("Matriculas", "la la-book", MatriculasView.class),
-                new MenuItemInfo("Estadisticas", "la la-chart-area", EstadisticasView.class),
+                new MenuItemInfo("Estadísticas", "la la-chart-area", EstadisticasView.class),
         };
 
         List<Tab> tabs = new ArrayList<>();

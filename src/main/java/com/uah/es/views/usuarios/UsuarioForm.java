@@ -12,6 +12,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -36,6 +37,8 @@ public class UsuarioForm extends FormLayout {
 
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
+
+    H2 titulo = new H2("Usuario");
 
     Binder<Usuario> binder = new BeanValidationBinder<>(Usuario.class);
     Usuario usuario = new Usuario();
@@ -79,7 +82,7 @@ public class UsuarioForm extends FormLayout {
                 .bind(Usuario::isEnable,Usuario::setEnable);
 
         setMaxWidth("600px");
-        add(nombre,correo,clave,estado,roles,configurarBtnsLayout());
+        add(titulo,nombre,correo,clave,estado,roles,configurarBtnsLayout());
     }
 
     private Component configurarBtnsLayout() {

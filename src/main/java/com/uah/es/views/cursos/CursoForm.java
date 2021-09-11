@@ -1,6 +1,8 @@
 package com.uah.es.views.cursos;
 
 import com.uah.es.model.Curso;
+import com.uah.es.model.Usuario;
+import com.uah.es.service.IUsuariosService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -8,6 +10,8 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -23,28 +27,46 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.converter.StringToDoubleConverter;
 import com.vaadin.flow.shared.Registration;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class CursoForm extends FormLayout {
 
+    //Servicios para comunicación con el backend
+    IUsuariosService usuariosService;
     MemoryBuffer buffer = new MemoryBuffer();
 
     // Inputs y btns del formulario
     TextField nombre= new TextField("Nombre");
-    IntegerField duracion = new IntegerField("Duración");
-    TextField profesor = new TextField ("Profesor");
-    TextField precio = new TextField ("Precio");
+    IntegerField duracion = new IntegerField("Duración (H)");
+    //TextField profesor = new TextField ("Profesor");
+    TextField precio = new TextField ("Precio (€)");
     Select<String> categoria = new Select<>();
+    Select<String> profesor = new Select<>();
     Upload imagen = new Upload(buffer);
 
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
 
+    H2 titulo = new H2("Curso");
+
     Binder<Curso> binder = new BeanValidationBinder<>(Curso.class);
     private Curso curso = new Curso();
 
-    public CursoForm(){
+    public CursoForm(IUsuariosService usuariosService){
+        this.usuariosService = usuariosService;
 
         categoria.setLabel("Categoría");
         categoria.setItems("Desarrollo", "Educación","Finanzas");
+
+        profesor.setLabel("Profesor");
+        List<Usuario> usuariosProfesor = Arrays.asList(usuariosService.buscarUsuariosPorRol(3));
+        List<String> nombresProfesores = new ArrayList<>();
+        usuariosProfesor.forEach(u ->{
+            nombresProfesores.add(u.getNombre());
+        });
+        profesor.setItems(nombresProfesores);
 
         // Relacionamos los atributos del objeto Alumno con los campos del formulario
         binder.forField(nombre)
@@ -66,7 +88,7 @@ public class CursoForm extends FormLayout {
                 .bind(Curso::getCategoria,Curso::setCategoria);
 
         setMaxWidth("600px");
-        add(nombre,duracion,profesor,precio,categoria,configurarCargaImagen(),configurarBtnsLayout());
+        add(titulo,nombre,duracion,profesor,precio,categoria,configurarCargaImagen(),configurarBtnsLayout());
     }
 
     private Component configurarBtnsLayout() {

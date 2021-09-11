@@ -7,6 +7,8 @@ public interface IUsuariosService {
 
     Usuario[] buscarTodos();
 
+    Usuario[] buscarUsuariosPorRol(Integer idRol);
+
     Usuario buscarUsuarioPorId(Integer idUsuario);
 
     Usuario buscarUsuarioPorNombre(String nombre);

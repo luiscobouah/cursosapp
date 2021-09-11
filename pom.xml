@@ -167,6 +167,11 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-button-flow</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.mett.vaadin</groupId>
+            <artifactId>tooltip</artifactId>
+            <version>2.1.2</version>
+        </dependency>
         <!-- Otras dependencias -->
         <dependency>
             <groupId>org.hibernate</groupId>
