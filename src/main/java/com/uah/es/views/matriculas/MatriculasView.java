@@ -66,7 +66,7 @@ public class MatriculasView extends VerticalLayout {
         gridsLayout.add(configurarCursosView(),configurarAlumnosView());
 
         HorizontalLayout btnsLayout = new HorizontalLayout();
-        eliminarMatricula.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        eliminarMatricula.addThemeVariants(ButtonVariant.LUMO_ERROR);
         eliminarMatricula.addClickListener( e -> eliminarMatricula(cursoSeleccionado,alumnoSeleccionado));
         btnsLayout.getElement().getStyle().set("margin-left", "auto");
         btnsLayout.add(eliminarMatricula);
@@ -76,29 +76,31 @@ public class MatriculasView extends VerticalLayout {
     }
 
     private void inicializarViews() {
-        cursosView = new CursosView(cursosService, matriculasService, usuariosService, alumnosService);
-        alumnosView = new AlumnosView(alumnosService);
+
+
     }
 
     private VerticalLayout configurarCursosView() {
+        cursosView = new CursosView(cursosService, matriculasService, usuariosService, alumnosService);
+
         VerticalLayout cursosLayout =  new VerticalLayout();
-        cursosView.ocultarAcciones();
+        cursosView.configuracionMatriculasView();
         cursosView.setWidth("100%");
         cursosView.addClickListener( e -> {
             cursoSeleccionado =  cursosView.cursoSeleccionado;
             eliminarMatricula.setEnabled(cursoSeleccionado.getIdCurso()!= null && alumnoSeleccionado.getIdAlumno()!= null);
             alumnosView.setVisible(cursoSeleccionado.getIdCurso()!= null);
-            alumnosView.ocultarAcciones(cursoSeleccionado);
-
+            alumnosView.configuracionMatriculasView(cursoSeleccionado);
         });
         cursosLayout.setPadding(false);
         cursosLayout.setMargin(false);
         cursosLayout.add(new H2("Cursos"),cursosView);
-
         return cursosLayout;
     }
 
     private VerticalLayout configurarAlumnosView() {
+        alumnosView = new AlumnosView(alumnosService);
+
         VerticalLayout alumnosLayout =  new VerticalLayout();
         alumnosView.setWidth("100%");
         alumnosView.setVisible(false);
@@ -125,7 +127,7 @@ public class MatriculasView extends VerticalLayout {
         HorizontalLayout btnsLayout = new HorizontalLayout();
         Button cancelarBtn = new Button("Cancelar");
         Button eliminarBtn = new Button("Eliminar matrícula");
-        eliminarBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        eliminarBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
         cancelarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         eliminarBtn.addClickShortcut(Key.ENTER);
         cancelarBtn.addClickShortcut(Key.ESCAPE);

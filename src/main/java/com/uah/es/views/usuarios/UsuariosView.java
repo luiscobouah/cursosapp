@@ -4,6 +4,7 @@ package com.uah.es.views.usuarios;
 import com.helger.commons.csv.CSVWriter;
 import com.uah.es.model.Alumno;
 import com.uah.es.model.Usuario;
+import com.uah.es.service.IRolesService;
 import com.uah.es.service.IUsuariosService;
 import com.uah.es.views.MainLayout;
 import com.vaadin.flow.component.Component;
@@ -42,7 +43,9 @@ import java.util.*;
 @Secured("Admin")
 public class UsuariosView extends Div {
 
+    //Servicios
     IUsuariosService usuariosService;
+    IRolesService rolesService;
 
     //Componentes visuales
     UsuarioForm usuarioForm;
@@ -59,9 +62,10 @@ public class UsuariosView extends Div {
 
     List<Usuario> listaUsuarios = new ArrayList<Usuario>();
 
-    public UsuariosView(IUsuariosService usuariosService) {
+    public UsuariosView(IUsuariosService usuariosService, IRolesService rolesService) {
 
         this.usuariosService = usuariosService;
+        this.rolesService =  rolesService;
 
         notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -87,42 +91,42 @@ public class UsuariosView extends Div {
         grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false).setAutoWidth(true);
         grid.addColumn(Usuario::getStringRoles).setHeader("Rol").setKey("rol").setSortable(false).setAutoWidth(true);
         grid.addComponentColumn(item -> {
-                    Icon editarIcon = new Icon(VaadinIcon.CHECK_CIRCLE_O);
-                    if(item.isEnable()){
-                        editarIcon.setColor("blue");
-                    } else {
-                        editarIcon.setColor("gray");
-                    }
-                    editarIcon.setSize("18px");
-                    return editarIcon;
-                })
-                .setKey("estado")
-                .setHeader("Estado")
-                .setTextAlign(ColumnTextAlign.CENTER)
-                .setAutoWidth(true);
+            Icon editarIcon = new Icon(VaadinIcon.CHECK_CIRCLE_O);
+            if(item.isEnable()){
+                editarIcon.setColor("blue");
+            } else {
+                editarIcon.setColor("gray");
+            }
+            editarIcon.setSize("18px");
+            return editarIcon;
+        })
+        .setKey("estado")
+        .setHeader("Estado")
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setAutoWidth(true);
         grid.addComponentColumn(item -> {
-                    Icon editarIcon = new Icon(VaadinIcon.EDIT);
-                    editarIcon.setColor("green");
-                    editarIcon.getStyle().set("cursor", "pointer");
-                    editarIcon.setSize("18px");
-                    editarIcon.addClickListener(e -> editarUsuario(item));
-                    return editarIcon;
-                })
-                .setKey("editar")
-                .setHeader("Editar")
-                .setTextAlign(ColumnTextAlign.CENTER);
+            Icon editarIcon = new Icon(VaadinIcon.EDIT);
+            editarIcon.setColor("green");
+            editarIcon.getStyle().set("cursor", "pointer");
+            editarIcon.setSize("18px");
+            editarIcon.addClickListener(e -> editarUsuario(item));
+            return editarIcon;
+        })
+        .setKey("editar")
+        .setHeader("Editar")
+        .setTextAlign(ColumnTextAlign.CENTER);
         grid.addComponentColumn(item -> {
-                    Icon editarIcon = new Icon(VaadinIcon.TRASH);
-                    editarIcon.setColor("red");
-                    editarIcon.getStyle().set("cursor", "pointer");
-                    editarIcon.setSize("18px");
-                    editarIcon.addClickListener(e -> eliminarUsuario(item));
-                    return editarIcon;
-                })
-                .setKey("eliminar")
-                .setHeader("Eliminar")
-                .setTextAlign(ColumnTextAlign.CENTER)
-                .setAutoWidth(true);
+            Icon editarIcon = new Icon(VaadinIcon.TRASH);
+            editarIcon.setColor("red");
+            editarIcon.getStyle().set("cursor", "pointer");
+            editarIcon.setSize("18px");
+            editarIcon.addClickListener(e -> eliminarUsuario(item));
+            return editarIcon;
+        })
+        .setKey("eliminar")
+        .setHeader("Eliminar")
+        .setTextAlign(ColumnTextAlign.CENTER)
+        .setAutoWidth(true);
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setColumnReorderingAllowed(true);
@@ -207,7 +211,7 @@ public class UsuariosView extends Div {
      */
     private Component configurarFormulario(){
 
-        usuarioForm = new UsuarioForm();
+        usuarioForm = new UsuarioForm(rolesService);
         usuarioForm.addListener(UsuarioForm.GuardarEvent.class, this::guardarCurso);
         usuarioForm.addListener(UsuarioForm.CerrarEvent.class, e -> cerrarFormulario());
         formularioDg.add(usuarioForm);

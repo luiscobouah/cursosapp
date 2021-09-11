@@ -3,6 +3,7 @@ package com.uah.es.views.usuarios;
 
 import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
+import com.uah.es.service.IRolesService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -22,10 +23,7 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.shared.Registration;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class UsuarioForm extends FormLayout {
 
@@ -43,18 +41,16 @@ public class UsuarioForm extends FormLayout {
     Usuario usuario = new Usuario();
 
 
-    public UsuarioForm(){
+    public UsuarioForm(IRolesService rolesService){
 
         estado.setLabel("Activo");
         estado.setValue(false);
 
-        List<Rol> rolesLista = new ArrayList<>();
-        rolesLista.add(new Rol(1,"Admin"));
-        rolesLista.add(new Rol(2,"Alumno"));
-        rolesLista.add(new Rol(3,"Profesor"));
+        List<Rol> rolesLista = Arrays.asList(rolesService.buscarTodos());
         roles.setLabel("Rol");
         roles.setItems(rolesLista);
-        //roles.addThemeVariants(RadioButtonGroupV.LUMO_VERTICAL);
+        //Se asigna por defecto el rol Alumno
+        roles.setValue(rolesLista.get(1));
         roles.isRequired();
         roles.addValueChangeListener(
                 e -> {

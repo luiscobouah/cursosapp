@@ -14,7 +14,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.charts.model.style.Color;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
@@ -78,11 +77,7 @@ public class CursosView extends Div {
     boolean isListadoMisCursos = false;
     public  Curso cursoSeleccionado = new Curso();
 
-    public CursosView(
-            ICursosService cursosService,
-            IMatriculasService matriculasService,
-            IUsuariosService usuariosService,
-            IAlumnosService alumnosService) {
+    public CursosView(ICursosService cursosService, IMatriculasService matriculasService, IUsuariosService usuariosService, IAlumnosService alumnosService) {
 
         this.cursosService = cursosService;
         this.matriculasService =  matriculasService;
@@ -128,7 +123,7 @@ public class CursosView extends Div {
         .setKey("alumnos")
         .setHeader("Alumnos")
         .setTextAlign(ColumnTextAlign.CENTER)
-        .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ADMIN)));
+        .setVisible(userHasRole(Collections.singletonList(Rol.ROL_ADMIN))||userHasRole(Collections.singletonList(Rol.ROL_PROFESOR)));
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.EDIT);
             editarIcon.setColor("green");
@@ -433,19 +428,44 @@ public class CursosView extends Div {
      */
     private void matricularCurso(Curso curso) {
 
-        Usuario usuario =  usuariosService.buscarUsuarioPorCorreo(getEmailUser());
-        usuario.setRoles(null);
-        Matricula matricula = new Matricula(curso.getIdCurso(),usuario);
+        // Se configura el Dialog para confirmar la eliminación
+        Dialog confirmacionDg = new Dialog();
+        Label msjConfirmacion = new Label();
+        msjConfirmacion.setText("¿Desea matricularse en el curso: "+curso.getNombre()+"?");
 
-        if(matriculasService.guardarMatricula(matricula)){
-            notificacionOK.setText("Se ha matriculado correctamente en el curso");
-            notificacionOK.open();
-        } else {
-            notificacionKO.setText("Error al matricularse en el curso");
-            notificacionKO.open();
-        }
-        listaMisCursos = alumnosService.buscarAlumnoPorCorreo(getEmailUser()).getCursos();
-        obtenerTodosCursos();
+        HorizontalLayout btnsLayout = new HorizontalLayout();
+        Button cancelarBtn = new Button("Cancelar");
+        Button matricularBtn = new Button("Matricular");
+        matricularBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        cancelarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        matricularBtn.addClickShortcut(Key.ENTER);
+        cancelarBtn.addClickShortcut(Key.ESCAPE);
+
+        matricularBtn.addClickListener(click -> {
+            Usuario usuario =  usuariosService.buscarUsuarioPorCorreo(getEmailUser());
+            usuario.setRoles(null);
+            Matricula matricula = new Matricula(curso.getIdCurso(),usuario);
+
+            if(matriculasService.guardarMatricula(matricula)){
+                notificacionOK.setText("Se ha matriculado correctamente en el curso");
+                notificacionOK.open();
+            } else {
+                notificacionKO.setText("Error al matricularse en el curso");
+                notificacionKO.open();
+            }
+            listaMisCursos = alumnosService.buscarAlumnoPorCorreo(getEmailUser()).getCursos();
+            confirmacionDg.close();
+            obtenerTodosCursos();
+        });
+        cancelarBtn.addClickListener(click -> {
+            confirmacionDg.close();
+        });
+
+        btnsLayout.setPadding(true);
+        btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btnsLayout.add(cancelarBtn,matricularBtn);
+        confirmacionDg.add(msjConfirmacion,btnsLayout);
+        confirmacionDg.open();
     }
 
     /**
@@ -520,7 +540,7 @@ public class CursosView extends Div {
      * Función ocultas las acciones cuando se llama desde MatriculasView.
      *
      */
-    public void ocultarAcciones() {
+    public void configuracionMatriculasView() {
 
         grid.getColumnByKey("duracion").setVisible(false);
         grid.getColumnByKey("profesor").setVisible(false);

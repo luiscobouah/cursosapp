@@ -10,8 +10,6 @@ public interface IMatriculasService {
 
     Matricula[] buscarTodas();
 
-    //Page<Matricula> buscarMatriculasPorIdCurso(Integer idCurso, Pageable pageable);
-
     Matricula buscarMatriculaPorId(Integer idMatricula);
 
     Matricula buscarMatriculaPorIdCursoIdUsuario(Integer idCurso, Integer idUsuario);

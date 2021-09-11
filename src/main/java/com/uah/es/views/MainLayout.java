@@ -115,6 +115,7 @@ public class MainLayout extends AppLayout {
         //logoLayout.setId("logo");
 
         Avatar usuarioAvatar = new Avatar();
+
         Usuario usuario = usuariosService.buscarUsuarioPorCorreo(getEmailUser());
         usuarioAvatar.addThemeVariants(AvatarVariant.LUMO_XLARGE);
 

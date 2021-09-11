@@ -8,10 +8,10 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class CursosServiceImpl implements ICursosService {
 
+    String url = "http://localhost:8002/cursos";
+
     @Autowired
     RestTemplate template;
-
-    String url = "http://localhost:8002/cursos";
 
     @Override
     public Curso[] buscarTodos() {
