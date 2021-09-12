@@ -3,9 +3,7 @@ package com.uah.es.model;
 import java.util.Objects;
 
 public class Rol {
-    public static String ROL_ADMIN = "Admin";
-    public static String ROL_ALUMNO = "Alumno";
-    public static String ROL_PROFESOR = "Profesor";
+
     private Integer idRol;
     private String authority;
 

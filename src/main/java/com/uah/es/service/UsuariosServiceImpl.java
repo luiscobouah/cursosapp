@@ -4,6 +4,7 @@ import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
 import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
+import com.uah.es.utils.Configuracion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -17,7 +18,7 @@ public class UsuariosServiceImpl implements IUsuariosService {
     @Autowired
     AlumnosServiceImpl alumnosService;
 
-    String url = "http://localhost:8003/usuarios";
+    String url = Configuracion.URL_SERVICIO_USUARIOS;
 
     @Override
     public Usuario[] buscarTodos() {

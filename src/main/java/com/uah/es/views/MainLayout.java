@@ -33,12 +33,8 @@ import java.util.Optional;
 
 import static com.uah.es.security.SecurityUtils.getEmailUser;
 
-
 /**
- * The main view is a top-level placeholder for other views.
- */
-/**
- * The main view is a top-level placeholder for other views.
+ * Esta es la vista principal de la App, en ella estan los links y acceso a las demas vistas.
  */
 @PWA(name = "CursosApp", shortName = "CursosApp", enableInstallPrompt = false)
 @Theme(themeFolder = "cursosapp")
@@ -72,11 +68,9 @@ public class MainLayout extends AppLayout {
     IUsuariosService usuariosService;
     private final Tabs menu;
     private H1 viewTitle;
-    //private AccessAnnotationChecker accessChecker;
 
     public MainLayout(IUsuariosService usuariosService) {
         this.usuariosService=usuariosService;
-        //setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeaderContent());
         menu = createMenu();
         addToDrawer(createDrawerContent(menu));
@@ -92,10 +86,6 @@ public class MainLayout extends AppLayout {
         layout.add(new DrawerToggle());
         viewTitle = new H1();
         layout.add(viewTitle);
-
-       /* Anchor cerrarSesion = new Anchor();*/
-
-
 
         return layout;
     }

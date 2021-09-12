@@ -7,7 +7,6 @@ import com.uah.es.service.IRolesService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -34,22 +33,22 @@ public class UsuarioForm extends FormLayout {
     TextField clave = new TextField ("Clave");
     Checkbox estado = new Checkbox();
     RadioButtonGroup<Rol> roles = new RadioButtonGroup<>();
-
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
-
     H2 titulo = new H2("Usuario");
 
     Binder<Usuario> binder = new BeanValidationBinder<>(Usuario.class);
     Usuario usuario = new Usuario();
-
+    List<Rol> rolesLista = new ArrayList<Rol>();
 
     public UsuarioForm(IRolesService rolesService){
 
+        // Se configura componente CheckBox para el estado
         estado.setLabel("Activo");
         estado.setValue(false);
 
-        List<Rol> rolesLista = Arrays.asList(rolesService.buscarTodos());
+        // Se configura el listado de roles en el componente RadioButtonGroup
+        rolesLista = Arrays.asList(rolesService.buscarTodos());
         roles.setLabel("Rol");
         roles.setItems(rolesLista);
         //Se asigna por defecto el rol Alumno
@@ -57,7 +56,7 @@ public class UsuarioForm extends FormLayout {
         roles.isRequired();
         roles.addValueChangeListener(
                 e -> {
-                    //usuario.setRoles(null);
+                    //El rol seleccionado se guarda en el usuario
                     Rol rolesSeleccionados = e.getValue();
                     List<Rol> roles = new ArrayList<Rol>();
                     roles.add(rolesSeleccionados);
@@ -65,7 +64,7 @@ public class UsuarioForm extends FormLayout {
                 }
         );
 
-        // Relacionamos los atributos del objeto Alumno con los campos del formulario
+        // Relacionamos los atributos del objeto Usuario con los campos del formulario
         binder.forField(nombre)
                 .asRequired("Campo requerido")
                 .bind(Usuario::getNombre,Usuario::setNombre);
@@ -76,49 +75,59 @@ public class UsuarioForm extends FormLayout {
         binder.forField(clave)
                 .asRequired("Campo requerido")
                 .bind(Usuario::getClave,Usuario::setClave);
-        /*binder.forField(roles)
-                .asRequired("Campo requerido");*/
         binder.forField(estado)
                 .bind(Usuario::isEnable,Usuario::setEnable);
 
         setMaxWidth("600px");
+        //Se añaden los componentes a la vista
         add(titulo,nombre,correo,clave,estado,roles,configurarBtnsLayout());
     }
 
+    /**
+     * Func para configurar los botones del formulario.
+     *
+     */
     private Component configurarBtnsLayout() {
 
         //Se configura los btns del formulario
         guardarBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         cancelarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        guardarBtn.addClickShortcut(Key.ENTER);
-        cancelarBtn.addClickShortcut(Key.ESCAPE);
-
         guardarBtn.addClickListener(click -> validarYGuardar());
         cancelarBtn.addClickListener(click -> fireEvent(new CerrarEvent(this)));
-
         binder.addStatusChangeListener(evt -> guardarBtn.setEnabled(binder.isValid()));
 
         HorizontalLayout btnsLayout =  new HorizontalLayout();
         btnsLayout.setPadding(true);
         btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         btnsLayout.add(cancelarBtn,guardarBtn);
-
         return btnsLayout;
     }
 
+    /**
+     * Func para asignar el objeto Usuario al formulario.
+     *
+     */
     public void setUsuario(Usuario usuario) {
 
         roles.clear();
         List<Rol> rolesUsuario = usuario.getRoles();
 
         if (rolesUsuario != null){
+            //Se asigna el rol del usuario en el formulario
             roles.setValue(rolesUsuario.get(0));
+        } else {
+            //Se asigna por defecto el rol Alumno en el formulario
+            roles.setValue(rolesLista.get(1));
         }
 
         this.usuario = usuario;
         binder.readBean(usuario);
     }
 
+    /**
+     * Func para validar y guardar el objeto Usuario del formulario.
+     *
+     */
     private void validarYGuardar() {
         try {
             binder.writeBean(usuario);
@@ -129,11 +138,11 @@ public class UsuarioForm extends FormLayout {
     }
 
     /**
-     * Funcion para desactivar el RadioButtonGroup de roles cuando se modifica un usuario.
+     * Func para modificar la visibilidad del RadioButtonGroup de roles cuando se modifica un usuario.
      *
      */
-    public  void desaactivarRoles() {
-        roles.setReadOnly(true);
+    public  void modificarVisibilidaRoles(boolean estado) {
+        roles.setReadOnly(estado);
     }
 
     /**

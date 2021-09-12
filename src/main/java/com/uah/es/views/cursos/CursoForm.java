@@ -6,11 +6,9 @@ import com.uah.es.service.IUsuariosService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -33,33 +31,29 @@ import java.util.List;
 
 public class CursoForm extends FormLayout {
 
-    //Servicios para comunicación con el backend
-    IUsuariosService usuariosService;
     MemoryBuffer buffer = new MemoryBuffer();
 
     // Inputs y btns del formulario
     TextField nombre= new TextField("Nombre");
     IntegerField duracion = new IntegerField("Duración (H)");
-    //TextField profesor = new TextField ("Profesor");
     TextField precio = new TextField ("Precio (€)");
     Select<String> categoria = new Select<>();
     Select<String> profesor = new Select<>();
     Upload imagen = new Upload(buffer);
-
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
-
     H2 titulo = new H2("Curso");
 
     Binder<Curso> binder = new BeanValidationBinder<>(Curso.class);
     private Curso curso = new Curso();
 
     public CursoForm(IUsuariosService usuariosService){
-        this.usuariosService = usuariosService;
 
+        // Se configura el listado de categorias en el componente Select
         categoria.setLabel("Categoría");
         categoria.setItems("Desarrollo", "Educación","Finanzas");
 
+        // Se configura el listado de profesores en el componente Select
         profesor.setLabel("Profesor");
         List<Usuario> usuariosProfesor = Arrays.asList(usuariosService.buscarUsuariosPorRol(3));
         List<String> nombresProfesores = new ArrayList<>();
@@ -68,7 +62,7 @@ public class CursoForm extends FormLayout {
         });
         profesor.setItems(nombresProfesores);
 
-        // Relacionamos los atributos del objeto Alumno con los campos del formulario
+        // Relacionamos los atributos del objeto Curso con los campos del formulario
         binder.forField(nombre)
                 .asRequired("Campo requerido")
                 .bind(Curso::getNombre,Curso::setNombre);
@@ -88,34 +82,40 @@ public class CursoForm extends FormLayout {
                 .bind(Curso::getCategoria,Curso::setCategoria);
 
         setMaxWidth("600px");
+        //Se añaden los componentes a la vista
         add(titulo,nombre,duracion,profesor,precio,categoria,configurarCargaImagen(),configurarBtnsLayout());
     }
 
+    /**
+     * Func para configurar los botones del formulario.
+     *
+     */
     private Component configurarBtnsLayout() {
 
         //Se configura los btns del formulario
         guardarBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         cancelarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        guardarBtn.addClickShortcut(Key.ENTER);
-        cancelarBtn.addClickShortcut(Key.ESCAPE);
-
         guardarBtn.addClickListener(click -> validarYGuardar());
         cancelarBtn.addClickListener(click -> fireEvent(new CerrarEvent(this)));
-
         binder.addStatusChangeListener(evt -> guardarBtn.setEnabled(binder.isValid()));
 
         HorizontalLayout btnsLayout =  new HorizontalLayout();
         btnsLayout.setPadding(true);
         btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         btnsLayout.add(cancelarBtn,guardarBtn);
-
         return btnsLayout;
     }
 
+    /**
+     * Func para configurar el componente visual Upload del formulario.
+     *
+     */
     private Component configurarCargaImagen() {
+
         VerticalLayout verticalLayout = new VerticalLayout();
         verticalLayout.setPadding(false);
 
+        // Se configura el componente uploap para la carga de la imagen en el formulario
         Label nombreCampoImagen = new Label("Imagen");
         imagen.setAcceptedFileTypes("image/jpeg", "image/png", "image/gif");
         imagen.addSucceededListener(event -> {
@@ -126,12 +126,22 @@ public class CursoForm extends FormLayout {
         return verticalLayout;
     }
 
+    /**
+     * Func para asignar el objeto Curso al formulario.
+     *
+     */
     public void setCurso(Curso curso) {
+
         this.curso = curso;
         binder.readBean(curso);
     }
 
+    /**
+     * Func para validar y guardar el objeto Curso del formulario.
+     *
+     */
     private void validarYGuardar() {
+
         try {
             binder.writeBean(curso);
             fireEvent(new CursoForm.GuardarEvent(this, curso));

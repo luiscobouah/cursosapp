@@ -56,7 +56,6 @@ public class UsuariosView extends Div {
     TextField nombreFiltro = new TextField();
     TextField correoFiltro = new TextField();
     Select<String> rolFiltro = new Select<>();
-
     Button buscarBtn = new Button("Buscar");
     Button mostrarTodosBtn = new Button("Mostrar todos");
     Button nuevoUsuarioBtn = new Button("Nuevo usuario",new Icon(VaadinIcon.PLUS));
@@ -69,31 +68,32 @@ public class UsuariosView extends Div {
 
     public UsuariosView(IUsuariosService usuariosService, IRolesService rolesService) {
 
+        //Se inicializan los servicios
         this.usuariosService = usuariosService;
         this.rolesService =  rolesService;
 
+        //Se configura el color de de la notificaciones
         notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         notificacionKO.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        addClassName("cursos-view");
+        //addClassName("cursos-view");
+        //Se configuran los componentes visuales y se añaden a la vista
         HorizontalLayout superiorLayout = new HorizontalLayout(configurarBuscador(),configurarFormulario());
         superiorLayout.setPadding(true);
         add(superiorLayout,configurarGrid(),configurarExportarExcel());
     }
 
     /**
-     * Configuración del grid y sus columnas.
+     * Func para configurar el grid y sus columnas.
      *
      */
     private Component configurarGrid() {
 
         VerticalLayout layoutGrid = new VerticalLayout();
-
         // Se añaden las columnas al grid
         grid.addColumn(Usuario::getIdUsuario).setHeader("ID").setKey("id").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getNombre).setHeader("Nombre").setKey("nombre").setSortable(true).setAutoWidth(true);
         grid.addColumn(Usuario::getCorreo).setHeader("Correo").setKey("correo").setSortable(false).setAutoWidth(true);
-        //grid.addColumn(Usuario::getClave).setHeader("Clave").setKey("clave").setSortable(false).setAutoWidth(true);
         grid.addColumn(Usuario::getStringRoles).setHeader("Rol").setKey("rol").setSortable(false).setAutoWidth(true);
         grid.addComponentColumn(item -> {
             Icon editarIcon = new Icon(VaadinIcon.CHECK_CIRCLE_O);
@@ -137,8 +137,6 @@ public class UsuariosView extends Div {
         grid.setColumnReorderingAllowed(true);
         // Número max de elementos a visualizar en cada página del grid
         grid.setPageSize(10);
-        //grid.setHeightByRows(true);
-        //grid.setSelectionMode(Grid.SelectionMode.MULTI);
         obtenerTodosUsuarios();
         layoutGrid.add(grid);
 
@@ -146,7 +144,7 @@ public class UsuariosView extends Div {
     }
 
     /**
-     * Configuracion del buscador.
+     *  Func para configurar el buscador.
      *
      */
     private Component configurarBuscador() {
@@ -159,15 +157,17 @@ public class UsuariosView extends Div {
         nombreFiltro.setClearButtonVisible(true);
         nombreFiltro.setValueChangeMode(ValueChangeMode.EAGER);
 
-        // Configuracion del filtro para buscar por profesor
+        // Configuracion del filtro para buscar por correo
         correoFiltro.setLabel("Correo");
         correoFiltro.setWidth("30%");
         correoFiltro.setClearButtonVisible(true);
         correoFiltro.setValueChangeMode(ValueChangeMode.EAGER);
 
+        // Configuracion del filtro para buscar por rol
         rolFiltro.setLabel("Rol");
         listaRoles=Arrays.asList(rolesService.buscarTodos());
         List<String> roles = new ArrayList<>();
+        //Se añade un elemento de texto vacio
         roles.add("");
         listaRoles.forEach(rol -> {
             roles.add(rol.getAuthority());
@@ -176,23 +176,26 @@ public class UsuariosView extends Div {
 
         buscarBtn.setEnabled(false);
 
-        // Se habilita el btn buscar solo cuando el nombre tenga valor
+        // Se habilita el btn buscar solo cuando el nombre tenga valor y los demás filtros se inhabilitan.
         nombreFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!Objects.equals(nombreFiltro.getValue(), ""));
             correoFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
             rolFiltro.setEnabled(Objects.equals(nombreFiltro.getValue(), ""));
         });
+        // Se habilita el btn buscar solo cuando el correo tenga valor y los demás filtros se inhabilitan.
         correoFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!Objects.equals(correoFiltro.getValue(), ""));
             nombreFiltro.setEnabled(Objects.equals(correoFiltro.getValue(), ""));
             rolFiltro.setEnabled(Objects.equals(correoFiltro.getValue(), ""));
         });
+        // Se habilita el btn buscar solo cuando el rol tenga valor y los demás filtros se inhabilitan.
         rolFiltro.addValueChangeListener(e -> {
             buscarBtn.setEnabled(!Objects.equals(rolFiltro.getValue(), ""));
             nombreFiltro.setEnabled(Objects.equals(rolFiltro.getValue(), ""));
             correoFiltro.setEnabled(Objects.equals(rolFiltro.getValue(), ""));
         });
 
+        //Se configuran los botones del buscador y sus listeners
         buscarBtn.getStyle().set("cursor", "pointer");
         buscarBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         buscarBtn.addClickListener(e -> filtrar());
@@ -214,13 +217,13 @@ public class UsuariosView extends Div {
         HorizontalLayout layoutBtns = new HorizontalLayout();
         layoutBtns.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         layoutBtns.add(buscarBtn,mostrarTodosBtn);
-
+        //Se añaden los componentes visuales
         buscadorLayout.add(nombreFiltro, correoFiltro,rolFiltro,layoutBtns);
         return buscadorLayout;
     }
 
     /**
-     * Configuracion del link para la descarga del Csv
+     * Func para configurar el link para la descarga del Csv
      *
      */
     private Component configurarExportarExcel() {
@@ -233,16 +236,17 @@ public class UsuariosView extends Div {
     }
 
     /**
-     * Configuracion del formulario para el alta de un nuevo alumno.
+     * Configuracion del formulario para el alta de un nuevo usuario.
      *
      */
     private Component configurarFormulario(){
 
         usuarioForm = new UsuarioForm(rolesService);
-        usuarioForm.addListener(UsuarioForm.GuardarEvent.class, this::guardarCurso);
+        usuarioForm.addListener(UsuarioForm.GuardarEvent.class, this::guardarUsuario);
         usuarioForm.addListener(UsuarioForm.CerrarEvent.class, e -> cerrarFormulario());
         formularioDg.add(usuarioForm);
 
+        //Se configura el boton para añadir un nuevo Usuario
         nuevoUsuarioBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         nuevoUsuarioBtn.addClickListener(event -> {
             formularioDg.open();
@@ -257,14 +261,16 @@ public class UsuariosView extends Div {
     }
 
     /**
-     * Función para buscar cursos.
+     * Func para buscar Usuarios.
      *
      */
     private void filtrar() {
+
         String nombre = nombreFiltro.getValue();
         String profesor = correoFiltro.getValue();
         String rol = rolFiltro.getValue();
 
+        //Solo se filtra por un solo filtro
         if(!Objects.equals(nombre, "")){
             listaUsuarios = Collections.singletonList(usuariosService.buscarUsuarioPorNombre(nombre));
         }
@@ -285,19 +291,20 @@ public class UsuariosView extends Div {
     }
 
     /**
-     * Función para actualizar el grid con todos los cursos que se han dado de alta.
+     * Func para actualizar el grid con todos los Usuarios que se han dado de alta.
      *
      */
     private void obtenerTodosUsuarios() {
+
         listaUsuarios = Arrays.asList(usuariosService.buscarTodos());
         grid.setItems(listaUsuarios);
     }
 
     /**
-     * Función para crear o actualizar los datos de un curso.
+     * Func para crear o actualizar los datos de un Usuario.
      *
      */
-    private void guardarCurso(UsuarioForm.GuardarEvent evt) {
+    private void guardarUsuario(UsuarioForm.GuardarEvent evt) {
         boolean resultado;
         Usuario usuario = evt.getUsuario();
 
@@ -308,29 +315,33 @@ public class UsuariosView extends Div {
             resultado = usuariosService.guardarUsuario(usuario);
         }
 
+        // Se muestra la notificacion indicando el restultado
         if(resultado){
             notificacionOK.setText("Se ha guardado correctamente el usuario");
             notificacionOK.open();
         } else {
-            notificacionKO.setText("Error al guardar el curso");
+            notificacionKO.setText("Error al guardar el usuario");
             notificacionKO.open();
         }
+
+        // Se actualiza el grid con todos los alumnos
         obtenerTodosUsuarios();
         cerrarFormulario();
     }
 
     /**
-     * Función para editar los datos de un curso.
+     * Func para editar los datos de un usuario.
      *
      */
     private void editarUsuario(Usuario usuario) {
+
         usuarioForm.setUsuario(usuario);
-        usuarioForm.desaactivarRoles();
+        usuarioForm.modificarVisibilidaRoles(true);
         formularioDg.open();
     }
 
     /**
-     * Función para eliminar un alumno.
+     * Func para eliminar un usuario.
      *
      */
     private void eliminarUsuario(Usuario usuario) {
@@ -349,7 +360,7 @@ public class UsuariosView extends Div {
         cancelarBtn.addClickShortcut(Key.ESCAPE);
 
         eliminarBtn.addClickListener(click -> {
-
+            // Se muestra la notificacion indicando el restultado
             if(usuariosService.eliminarUsuario(usuario.getIdUsuario())){
                 notificacionOK.setText("Se ha eliminado correctamente el usuario");
                 notificacionOK.open();
@@ -357,7 +368,7 @@ public class UsuariosView extends Div {
                 notificacionKO.setText("Error al eliminar el usuario");
                 notificacionKO.open();
             }
-
+            // Se actualiza el grid con todos los usuario
             confirmacionDg.close();
             obtenerTodosUsuarios();
 
@@ -365,6 +376,7 @@ public class UsuariosView extends Div {
         cancelarBtn.addClickListener(click -> {
             confirmacionDg.close();
         });
+        //Se añaden los componentes visuales al Dialog
         btnsLayout.setPadding(true);
         btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         btnsLayout.add(cancelarBtn,eliminarBtn);
@@ -373,12 +385,12 @@ public class UsuariosView extends Div {
     }
 
     /**
-     * Función para generar el Csv con los datos del curso
+     * Func para generar el Csv con los datos de usuarios
      *
      */
     private InputStream generarCsv() {
-        try {
 
+        try {
             StringWriter stringWriter = new StringWriter();
             CSVWriter csvWriter = new CSVWriter(stringWriter);
             csvWriter.setSeparatorChar(';');
@@ -394,12 +406,15 @@ public class UsuariosView extends Div {
     }
 
     /**
-     * Función para cerrar el formulario de curso.
+     * Func para cerrar el formulario de usuario.
      *
      */
     private void cerrarFormulario() {
+
+        //Se crea un Usuario vacio para resetear el formulario
         Usuario usuario = new Usuario();
         usuarioForm.setUsuario(usuario);
+        usuarioForm.modificarVisibilidaRoles(false);
         formularioDg.close();
     }
 

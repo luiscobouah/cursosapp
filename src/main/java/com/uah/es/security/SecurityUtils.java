@@ -20,14 +20,17 @@ import java.util.stream.Stream;
 public final class SecurityUtils {
 
     private SecurityUtils() {
-        // Util methods only
     }
 
+    /**
+     * Func para verificar si la vista(clase) necesita un rol para visualizarla.
+     *
+     */
     public static boolean isAccessGranted(Class<?> securedClass) {
-        // Allow if no roles are required.
+
         Secured secured = AnnotationUtils.findAnnotation(securedClass, Secured.class);
         if (secured == null) {
-            return true; // (1)
+            return true;
         }
 
         // lookup needed role in user roles

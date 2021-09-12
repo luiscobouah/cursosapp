@@ -8,6 +8,7 @@ import com.uah.es.service.ICursosService;
 import com.uah.es.service.IMatriculasService;
 import com.uah.es.service.IRolesService;
 import com.uah.es.service.IUsuariosService;
+import com.uah.es.utils.Configuracion;
 import com.uah.es.views.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.board.Board;
@@ -45,6 +46,8 @@ public class EstadisticasView extends Div {
     List<Matricula> listaMatriculas = new ArrayList<Matricula>();
 
     EstadisticasView(ICursosService cursosService, IUsuariosService usuariosService, IRolesService rolesService, IMatriculasService matriculasService){
+
+        //Se inicializan los servicios
         this.cursosService = cursosService;
         this.usuariosService = usuariosService;
         this.rolesService =  rolesService;
@@ -52,32 +55,36 @@ public class EstadisticasView extends Div {
 
         //Configuracion de componente Board para visualizar los distintos gráficos
         Board board = new Board();
-        if(userHasRole(Collections.singletonList(Rol.ROL_ADMIN))){
-            board.addRow(graficoCursosAlumnos(Rol.ROL_ADMIN),graficoRolesUsuarios());
+        // Se configuran las filas del Board dependiendo del Rol de usuario
+        if(userHasRole(Collections.singletonList(Configuracion.ROL_ADMIN))){
+            board.addRow(graficoCursosAlumnos(Configuracion.ROL_ADMIN),graficoRolesUsuarios());
             board.addRow(graficoMatriculasPorMes());
         }
-        if(userHasRole(Collections.singletonList(Rol.ROL_PROFESOR))){
-            board.addRow(graficoCursosAlumnos(Rol.ROL_PROFESOR)).setHeight("70%");
+        if(userHasRole(Collections.singletonList(Configuracion.ROL_PROFESOR))){
+            board.addRow(graficoCursosAlumnos(Configuracion.ROL_PROFESOR)).setHeight("70%");
             board.setHeightFull();
             setHeightFull();
         }
         add(board);
     }
 
+    /**
+     *  Func para configurar el grafico de Cursos.
+     *
+     */
     private Component graficoCursosAlumnos(String rol) {
-        Chart graficoCursos = new Chart(ChartType.PIE);
 
+        Chart graficoCursos = new Chart(ChartType.PIE);
         Configuration conf = graficoCursos.getConfiguration();
 
         // Configuracion del titulo y subtitulo
         conf.setTitle("Cursos");
         conf.setSubTitle("Número de alumnos por curso");
-
         //Configuracion del tooltip para visualizar el numero de alumnos
         Tooltip tooltip = new Tooltip();
         conf.setTooltip(tooltip);
 
-        if (rol.equals(Rol.ROL_PROFESOR)) {
+        if (rol.equals(Configuracion.ROL_PROFESOR)) {
             PlotOptionsPie plotOptions = new PlotOptionsPie();
             plotOptions.setAllowPointSelect(true);
             plotOptions.setCursor(Cursor.POINTER);
@@ -88,7 +95,7 @@ public class EstadisticasView extends Div {
         //Datos a visualizar
         DataSeries cursos = new DataSeries("Alumnos");
         //Se obtienen todos los cursos dependiendo del ROL.
-        if (rol.equals(Rol.ROL_ADMIN)){
+        if (rol.equals(Configuracion.ROL_ADMIN)){
             listaCursos = Arrays.asList(cursosService.buscarTodos());
         }else {
             Usuario usuario = usuariosService.buscarUsuarioPorCorreo(getEmailUser());
@@ -105,6 +112,10 @@ public class EstadisticasView extends Div {
         return  graficoCursos;
     }
 
+    /**
+     *  Func para configurar el grafico de Usuarios.
+     *
+     */
     private Component graficoRolesUsuarios() {
 
         Chart graficoRoles = new Chart(ChartType.COLUMN);
@@ -144,6 +155,10 @@ public class EstadisticasView extends Div {
         return graficoRoles;
     }
 
+    /**
+     *  Func para configurar el grafico de Matriculas.
+     *
+     */
     private Component graficoMatriculasPorMes(){
 
         //Se obtienen todas las matriculas
@@ -162,7 +177,7 @@ public class EstadisticasView extends Div {
         y.setTitle("Número matrículas");
         conf.addyAxis(y);
 
-        //PAra cada mes se recuperan las matriculas
+        //Para cada mes se recuperan las matriculas
         DataSeries matriculas = new DataSeries("Matriculas");
         matriculas.setData(
             obtenerNumeroMatriculasMes(0),//Enero
@@ -184,7 +199,7 @@ public class EstadisticasView extends Div {
     }
 
     /**
-     * Función para obtener el número de usuarios de un determinado rol.
+     * Func para obtener el número de usuarios de un determinado rol.
      *
      */
     private int obtenerNumeroUsuariosRol(List<Usuario> usuarios, Rol rol) {
@@ -198,7 +213,7 @@ public class EstadisticasView extends Div {
     }
 
     /**
-     * Función para obtener el número de matriculas por mes.
+     * Func para obtener el número de matriculas por mes.
      *
      */
     private int obtenerNumeroMatriculasMes(int mes) {

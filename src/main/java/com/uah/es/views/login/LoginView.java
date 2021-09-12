@@ -4,16 +4,12 @@ import com.uah.es.model.Rol;
 import com.uah.es.model.Usuario;
 import com.uah.es.service.IRolesService;
 import com.uah.es.service.IUsuariosService;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.notification.Notification;
@@ -42,10 +38,13 @@ import java.util.List;
 
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
-    private LoginForm login = new LoginForm();
-    FormLayout registroForm = new FormLayout();
-    Binder<Usuario> binder = new Binder<>();
+    // Servicio para comunicación con el backend
+    IUsuariosService usuariosService;
+    IRolesService rolesService;
 
+    //Componentes visuales
+    LoginForm login = new LoginForm();
+    FormLayout registroForm = new FormLayout();
     Button registrarseBtn = new Button("Registrarse");
     Dialog registroDg = new Dialog();
     Notification notificacionOK = new Notification("", 3000);
@@ -58,52 +57,41 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     PasswordField contrasena = new PasswordField("Contraseña");
     Button cancelarBtn = new Button("Cancelar");
     Button guardarBtn = new Button("Guardar");
-
-    IUsuariosService usuariosService;
-    IRolesService rolesService;
+    Binder<Usuario> binder = new Binder<>();
 
     Usuario usuario;
 
     public LoginView(IUsuariosService usuariosService, IRolesService rolesService) {
 
+        //Se inicializan los servicios
         this.usuariosService = usuariosService;
         this.rolesService = rolesService;
 
-        addClassName("login-view");
+        //Se configuran el tamaño y la posicion el componente LoginView
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
+        // Se configura el LoginView en idioma español
         login.setI18n(configurarLoginEsp());
         login.setAction("login");
 
-        /*H1 title = new H1();
-        title.getStyle().set("color", "var(--lumo-base-color)");
-        Icon icon = VaadinIcon.VAADIN_H.create();
-        icon.setSize("30px");
-        icon.getStyle().set("top", "-4px");
-        title.add(icon);
-        title.add(new Text(" My App"));*/
-
-
-        confirgurarFormRegistro();
-
+        //Se configura el boton de registro nuevo usuario
         registrarseBtn.getStyle().set("cursor", "pointer");
         registrarseBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         registrarseBtn.addClickListener(e -> {
             registroDg.open();
         });
 
-       H1 titulo = new H1("Cursos App ");
-       /* Image icono = new Image("images/logo_small_icon_only.png", "CursosApp logo");
-        icono.setWidth("30px");
-        icono.setHeight("30px");
-        titulo.add(icono);*/
-
-        //titulo.add(VaadinIcon.VAADIN_H.create());
-
+        confirgurarFormRegistro();
+        H1 titulo = new H1("Cursos App ");
+        addClassName("login-view");
         add(titulo,login,registrarseBtn);
     }
 
+    /**
+     * Func para configurar el LoginView en español.
+     *
+     */
     private LoginI18n configurarLoginEsp() {
 
         final LoginI18n i18n = LoginI18n.createDefault();
@@ -120,6 +108,10 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         return i18n;
     }
 
+    /**
+     * Func para configurar el formulario de registro de nuevo usuario.
+     *
+     */
     private void confirgurarFormRegistro () {
 
         usuario = new Usuario();
@@ -136,19 +128,19 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         binder.forField(contrasena)
                 .asRequired("Campo requerido")
                 .bind(Usuario::getClave,Usuario::setClave);
-        // Click listeners for the buttons
+
+        // Se configuran los listener para los botones del formulario
         guardarBtn.addClickListener(event -> {
             if (binder.writeBeanIfValid(usuario)) {
                 guardarUsuario(usuario);
             }
         });
         cancelarBtn.addClickListener(event -> {
-            // clear fields by setting null
             setUsuario();
             registroDg.close();
-            //infoLabel.setText("");
         });
 
+        //Se añaden los componentes visuales al formulario
         registroForm.add(nombre,correo,contrasena);
         registroForm.setResponsiveSteps(new FormLayout.ResponsiveStep("1px", 1));
 
@@ -156,18 +148,25 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         btnsLayout.add(cancelarBtn, guardarBtn);
         btnsLayout.setPadding(true);
         btnsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+        //Se añaden los componentesn visuales al Dialog
         registroDg.add(tituloFormulario,registroForm,btnsLayout);
         registroDg.setMaxWidth("600px");
 
     }
 
+    /**
+     * Func para guardar un nuevo usuario.
+     *
+     */
     public void guardarUsuario(Usuario usuario) {
-
+        //Se asgina por defecto el rol Alumno-2 al usuario que se ha registrado
         List<Rol> rolesLista = new ArrayList<>();
         rolesLista.add(new Rol(2,"Alumno"));
         usuario.setRoles(rolesLista);
         usuario.setEnable(true);
 
+        // Se muestra la notificacion indicando el restultado
         if(usuariosService.guardarUsuario(usuario)){
             registroDg.close();
             notificacionOK.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -180,6 +179,11 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             notificacionKO.open();
         }
     }
+
+    /**
+     * Func para asignar el objeto Usuario al formulario y resetearlo.
+     *
+     */
     public void setUsuario() {
 
         Usuario usuario = new Usuario();
@@ -189,7 +193,6 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-        // inform the user about an authentication error
         if(beforeEnterEvent.getLocation()
                 .getQueryParameters()
                 .getParameters()

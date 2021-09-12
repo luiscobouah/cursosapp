@@ -1,6 +1,7 @@
 package com.uah.es.service;
 
 import com.uah.es.model.Curso;
+import com.uah.es.utils.Configuracion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -8,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class CursosServiceImpl implements ICursosService {
 
-    String url = "http://localhost:8002/cursos";
+    String url = Configuracion.URL_SERVICIO_CURSOS;
 
     @Autowired
     RestTemplate template;

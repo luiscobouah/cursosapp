@@ -2,6 +2,7 @@ package com.uah.es.service;
 
 import com.uah.es.model.Alumno;
 import com.uah.es.model.Curso;
+import com.uah.es.utils.Configuracion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ public class AlumnosServiceImpl implements IAlumnosService {
     @Autowired
     RestTemplate template;
 
-    String url = "http://localhost:8002/alumnos";
+    String url = Configuracion.URL_SERVICIO_ALUMNOS;
 
     @Override
     public Alumno[] buscarTodos() {
